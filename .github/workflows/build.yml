@@ -1,0 +1,40 @@
+name: Build and Publish Svarog CommandCenter
+
+on:
+  push:
+    branches:
+      - main # Збірка запускається автоматично, коли ти оновлюєш гілку main
+  workflow_dispatch: # Додає чарівну кнопку для ручного запуску у вкладці Actions
+
+jobs:
+  release:
+    name: Build and Publish App
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest] # GitHub запустить паралельно чисту Windows та чистий Apple Mac
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Project Dependencies
+        run: npm install
+
+      - name: Compile and Upload to GitHub Releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Дає роботу легальний доступ до створення релізів
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            npx electron-builder --win -p always
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            npx electron-builder --mac -p always
+          fi
+        shell: bash

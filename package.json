@@ -1,0 +1,58 @@
+{
+  "name": "svarog-center",
+  "version": "1.0.0",
+  "description": "SVAROG TEAM Command Center",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:all": "electron-builder --win --mac"
+  },
+  "keywords": [
+    "svarog",
+    "electron"
+  ],
+  "author": "SVAROG TEAM",
+  "license": "ISC",
+  "dependencies": {
+    "electron-updater": "^6.1.4"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.svarog.center",
+    "productName": "SvarogCommandCenter",
+    "copyright": "Copyright © 2026 SVAROG TEAM",
+    "directories": {
+      "output": "dist"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "blazhilinvladislav33-debug",
+      "repo": "Svarog-Center",
+      "private": false
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "logo.png"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "logo.png",
+      "category": "public.app-category.utilities"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
