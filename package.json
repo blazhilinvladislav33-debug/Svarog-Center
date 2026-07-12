@@ -57,8 +57,7 @@
       "runAfterFinish": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "displayLanguageSelector": false,
-      "language": "uk"
+      "displayLanguageSelector": false
     }
   }
 }
