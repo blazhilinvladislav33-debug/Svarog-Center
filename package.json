@@ -1,6 +1,6 @@
 {
   "name": "svarog-center",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SVAROG TEAM Command Center",
   "main": "main.js",
   "scripts": {
@@ -38,15 +38,12 @@
     "win": {
       "target": [
         "nsis"
-      ],
-      "icon": "logo.png"
+      ]
     },
     "mac": {
-      "identity": null,
       "target": [
         "dmg"
       ],
-      "icon": "logo.png",
       "category": "public.app-category.utilities"
     },
     "nsis": {
