@@ -51,16 +51,14 @@
       "allowToChangeInstallationDirectory": true,
       "installerSidebar": "installer-assets/sidebar.png",
       "installerHeader": "installer-assets/header.png",
-      "uninstallSidebar": "installer-assets/sidebar.png",
+      "uninstallerSidebar": "installer-assets/sidebar.png",
       "shortcutName": "Svarog CommandCenter",
       "uninstallDisplayName": "Svarog CommandCenter (Видалити)",
       "runAfterFinish": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "displayLanguageSelector": false,
-      "languages": [
-        "ukrainian"
-      ]
+      "language": "uk"
     }
   }
 }
