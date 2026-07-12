@@ -695,6 +695,8 @@
                 <div class="form-group"><input type="password" id="user-password" class="form-input" placeholder="Пароль доступу" required></div>
                 <button type="submit" class="btn" id="login-btn-submit" style="width:100%; margin-top:10px;">АВТОРИЗУВАТИСЯ</button>
             </form>
+
+            <button class="btn btn-outline" style="width:100%; margin-top:15px; border-color: #555; color: #aaa;" onclick="requestAdminAccess()">Немає доступу? Надіслати запит</button>
         </div>
     </div>
 
@@ -938,13 +940,13 @@
         let globalChatsData = {}; let globalNewsData = []; let globalFeedbackData = []; let globalVolunteersData = [];
         let globalSocialNetworks = []; let globalOrdersData = []; let globalMerchData = []; let globalCategories = [];
         let globalPromocodes = []; let globalReportsData = []; let globalAdminRequests = []; let globalActiveAdmins = [];
-        let globalHubLinks = []; let globalHubClicks = []; // НОВІ ЗМІННІ ДЛЯ ХАБУ
+        let globalHubLinks = []; let globalHubClicks = [];
 
         let unsubscribeChats = null; let unsubscribeFeedback = null; let unsubscribeVolunteers = null; let unsubscribeSocials = null;
         let unsubscribeNews = null; let unsubscribeOrders = null; let unsubscribeMerch = null; let unsubscribeConfig = null;
         let unsubscribePromos = null; let unsubscribePaymentConfig = null; let unsubscribeReports = null; let unsubscribeStats = null;
         let unsubscribeStatsReal = null; let unsubscribeAdminRequests = null; let unsubscribeAdmins = null;
-        let unsubscribeHubLinks = null; let unsubscribeHubClicks = null; // НОВІ СЛУХАЧІ
+        let unsubscribeHubLinks = null; let unsubscribeHubClicks = null;
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container'); if(!container) return;
@@ -1062,7 +1064,7 @@
 
         function renderAllDynamicData() { renderChatsList(); renderOrdersList(); updateBadgesLogic(); renderFeedbackList(); renderVolunteersList(); }
 
-        // --- АВТОРИЗАЦІЯ ---
+        // --- АВТОРИЗАЦІЯ ТА ЗАПИТ ДОСТУПУ ---
         async function checkAdminAccess(userEmail) {
             if (!userEmail) return false; const emailClean = userEmail.trim().toLowerCase();
             if (emailClean === 'svarogteam35@gmail.com') { isSuperadminSession = true; const b = document.getElementById('superadmin-only-tab-btn'); if(b) b.style.display = 'flex'; return true; }
@@ -1074,9 +1076,44 @@
             else { document.getElementById('login-screen').style.display = 'flex'; document.getElementById('app-main').style.display = 'none'; }
         });
 
-        async function handleLogin(event) { event.preventDefault(); const emailInp = document.getElementById('user-email').value.trim().toLowerCase(); const passInp = document.getElementById('user-password').value.trim(); const submitBtn = document.getElementById('login-btn-submit'); submitBtn.innerText = "ПЕРЕВІРКА..."; submitBtn.disabled = true; try { await firebase.auth().signInWithEmailAndPassword(emailInp, passInp); showToast("Успіх!", "success"); } catch (e) { showToast("Помилка входу: перевірте дані.", "error"); submitBtn.innerText = "АВТОРИЗУВАТИСЯ"; submitBtn.disabled = false; } }
+        async function handleLogin(event) {
+            event.preventDefault();
+            const emailInp = document.getElementById('user-email').value.trim().toLowerCase();
+            const passInp = document.getElementById('user-password').value.trim();
+            const submitBtn = document.getElementById('login-btn-submit');
+            submitBtn.innerText = "ПЕРЕВІРКА...";
+            submitBtn.disabled = true;
+            try {
+                await firebase.auth().signInWithEmailAndPassword(emailInp, passInp);
+                showToast("Успіх!", "success");
+            } catch (e) {
+                showToast("Помилка входу: перевірте дані.", "error");
+                submitBtn.innerText = "АВТОРИЗУВАТИСЯ";
+                submitBtn.disabled = false;
+            }
+        }
+
         async function handleLogout() { try { await firebase.auth().signOut(); isSuperadminSession = false; document.getElementById('user-email').value = ""; document.getElementById('user-password').value = ""; setTimeout(() => location.reload(), 500); } catch (e) { console.error(e); } }
         function enterDashboard() { document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-main').style.display = 'flex'; renderCombatReportAdminGrid(); initFirebaseRealtimeStreams(); generateSizeStockInputs(); document.getElementById('news-date-field').valueAsDate = new Date(); }
+
+        // НОВЕ: Функція запиту доступу (реєстрації)
+        async function requestAdminAccess() {
+            const email = prompt("Введіть електронну пошту, яку плануєте використовувати:");
+            if (!email) return;
+            const name = prompt("Введіть ваше ПІБ або Позивний:");
+            if (!name) return;
+
+            try {
+                await db.collection("admin_requests").doc(email.toLowerCase().trim()).set({
+                    email: email.toLowerCase().trim(),
+                    name: name.trim(),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast("Запит надіслано! Очікуйте підтвердження адміністратором.", "success");
+            } catch(e) {
+                showToast("Помилка відправки запиту", "error");
+            }
+        }
 
         // --- БОЙОВИЙ ЗВІТ ---
         const combatCategories = [ { id: "os_rov", ua: "ОС РОВ" }, { id: "drone_points", ua: "Точки вильоту дронів" }, { id: "antennas", ua: "Антени" }, { id: "air_defense", ua: "ЗРК, ЗГРК" }, { id: "aviation", ua: "Літаки та гелікоптери" }, { id: "fleet", ua: "Флот" }, { id: "radar_complex", ua: "РЛС, РЕР" }, { id: "radar_port", ua: "РЛС (портативні)" }, { id: "ew_complex", ua: "РЕБ (комплекс)" }, { id: "ew_auto", ua: "РЕБ (авто)" }, { id: "enemy_wings", ua: "Ворожі крила" }, { id: "shaheds", ua: "Шахеди" }, { id: "tanks", ua: "Танки" }, { id: "apc", ua: "ББМ, БМП, БТР" }, { id: "artillery", ua: "Гармати" }, { id: "spg", ua: "САУ" }, { id: "mortars", ua: "Міномети" }, { id: "mlrs", ua: "РСЗВ" }, { id: "vehicles", ua: "Техніка" }, { id: "moto", ua: "Мотоцикли" }, { id: "depots", ua: "Склади" }, { id: "strat_infra", ua: "Страт. інфраструктура" }, { id: "tact_infra", ua: "Тактична інфраструктура" }, { id: "trenches", ua: "Укриття" }, { id: "network", ua: "Камери / Мережа" }, { id: "enemy_copters", ua: "Ворожі коптери" }, { id: "other", ua: "Інше" } ];
