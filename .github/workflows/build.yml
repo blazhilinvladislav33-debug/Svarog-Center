@@ -12,6 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
+      fail-fast: false # 👈 ТЕПЕР WINDOWS НЕ СКАСУЄТЬСЯ, ЯКЩО MAC ВПАДЕ!
       matrix:
         os: [windows-latest, macos-latest]
 
@@ -30,7 +31,6 @@ jobs:
       - name: Compile and Upload to GitHub Releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_IDENTITY_AUTO_DISCOVERY: false # 👈 ВИМИКАЄ ПРИМУСОВИЙ ПІДПИС APPLE ДЛЯ ХМАРИ
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
             npx electron-builder --win -p always
