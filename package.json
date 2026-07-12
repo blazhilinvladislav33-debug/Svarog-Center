@@ -58,8 +58,9 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "displayLanguageSelector": false,
-      "languages": [ "ukrainian" ]
+      "languages": [
+        "ukrainian"
+      ]
     }
-  }
   }
 }
