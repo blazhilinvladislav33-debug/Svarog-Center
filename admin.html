@@ -588,6 +588,12 @@
             gap: 20px;
         }
 
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
         .merch-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -623,6 +629,56 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* ТУМБЛЕР ДЛЯ КНОПОК ХАБУ */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+            .toggle-switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255,255,255,0.1);
+            transition: .3s;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 16px;
+                width: 16px;
+                left: 3px;
+                bottom: 3px;
+                background-color: #888;
+                transition: .3s;
+                border-radius: 50%;
+            }
+
+        input:checked + .slider {
+            background-color: rgba(121, 133, 84, 0.3);
+            border-color: var(--theme-color);
+        }
+
+            input:checked + .slider:before {
+                transform: translateX(20px);
+                background-color: var(--theme-color);
+            }
     </style>
 </head>
 <body>
@@ -675,6 +731,7 @@
                 <button class="nav-item" onclick="switchTab('promo-tab', this, '🎟️ Купони та Сертифікати')"><div class="nav-item-left"><span>🎟️</span> <span>Купони</span></div></button>
                 <button class="nav-item" onclick="switchTab('stats-tab', this, '🦅 Бойовий Звіт (SVAROG)')"><div class="nav-item-left"><span>🦅</span> <span>Звіт SVAROG</span></div></button>
                 <button class="nav-item" onclick="switchTab('link-management-tab', this, '📰 Контент та Налаштування')"><div class="nav-item-left"><span>📰</span> <span>Контент</span></div></button>
+                <button class="nav-item" onclick="switchTab('hub-management-tab', this, '🔗 Мультипосилання (Хаб)')"><div class="nav-item-left"><span>🔗</span> <span>Мультипосилання</span></div></button>
                 <button class="nav-item" onclick="switchTab('feedback-tab', this, '📂 Заявки з сайту')"><div class="nav-item-left"><span>📂</span> <span>Заявки</span></div><div class="nav-badge" id="badge-feedback">0</div></button>
                 <button class="nav-item" onclick="switchTab('volunteer-tab', this, '📋 Анкети волонтерів')"><div class="nav-item-left"><span>📋</span> <span>Волонтери</span></div><div class="nav-badge" id="badge-volunteers">0</div></button>
                 <button class="nav-item" onclick="switchTab('archive-tab', this, '🗄️ Архів бази даних')"><div class="nav-item-left"><span>🗄️</span> <span>Архів</span></div></button>
@@ -763,6 +820,59 @@
                     </div>
                 </div>
 
+                <div id="hub-management-tab" class="tab-content">
+
+                    <h3 class="card-title" style="margin-bottom: 10px;">📊 Статистика кліків по Хабу</h3>
+                    <div class="grid-4" style="margin-bottom: 25px;">
+                        <div class="admin-card" style="margin:0; text-align:center; padding: 15px; border-top: 3px solid var(--theme-color);">
+                            <div style="font-size:0.85rem; color:#aaa; margin-bottom: 5px;">За сьогодні</div>
+                            <div id="hub-stat-today" style="font-size:2rem; font-weight:800; color:var(--text-main);">0</div>
+                        </div>
+                        <div class="admin-card" style="margin:0; text-align:center; padding: 15px;">
+                            <div style="font-size:0.85rem; color:#aaa; margin-bottom: 5px;">За 7 днів</div>
+                            <div id="hub-stat-7d" style="font-size:2rem; font-weight:800; color:var(--theme-color);">0</div>
+                        </div>
+                        <div class="admin-card" style="margin:0; text-align:center; padding: 15px;">
+                            <div style="font-size:0.85rem; color:#aaa; margin-bottom: 5px;">За 30 днів</div>
+                            <div id="hub-stat-30d" style="font-size:2rem; font-weight:800; color:#00ffcc;">0</div>
+                        </div>
+                        <div class="admin-card" style="margin:0; text-align:center; padding: 15px;">
+                            <div style="font-size:0.85rem; color:#aaa; margin-bottom: 5px;">За весь час</div>
+                            <div id="hub-stat-all" style="font-size:2rem; font-weight:800; color:#fff;">0</div>
+                        </div>
+                    </div>
+
+                    <div class="content-grid">
+                        <div class="admin-card">
+                            <h3 class="card-title" id="hub-form-title">Додати нове посилання</h3>
+                            <input type="hidden" id="edit-hub-id" value="">
+
+                            <div class="form-group">
+                                <label class="form-label">Текст кнопки:</label>
+                                <input type="text" id="hub-title" class="form-input" placeholder="Напр: Наш Telegram" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">URL посилання:</label>
+                                <input type="url" id="hub-url" class="form-input" placeholder="https://t.me/..." required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Іконка (Емодзі):</label>
+                                <input type="text" id="hub-icon" class="form-input" placeholder="📱" maxlength="4" style="font-size: 1.5rem; text-align: center; width: 80px;">
+                            </div>
+
+                            <div class="grid-2" style="margin-top: 20px;">
+                                <button id="hub-submit-btn" class="btn" onclick="saveHubLink()">💾 Зберегти</button>
+                                <button id="hub-cancel-btn" class="btn btn-outline" style="border-color:#ff4a4a; color:#ff4a4a; display:none;" onclick="cancelEditHubLink()">Скасувати</button>
+                            </div>
+                        </div>
+
+                        <div class="admin-card">
+                            <h3 class="card-title">Список кнопок в Хабі</h3>
+                            <div id="box-for-hub-links" style="display:flex; flex-direction:column; gap:10px;"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="link-management-tab" class="tab-content">
                     <div class="content-grid">
                         <div style="display:flex; flex-direction:column; gap:20px;">
@@ -818,20 +928,23 @@
             </div>
         </main>
     </div>
+
     <script>
         const NP_API_URL = "https://api.novaposhta.ua/v2.0/json/";
-        let NP_API_KEY = "ТВІЙ_КЛЮЧ_НОВОЇ_ПОШТИ"; // ВСТАВ СВІЙ КЛЮЧ
+        let NP_API_KEY = "ТВІЙ_КЛЮЧ_НОВОЇ_ПОШТИ";
 
         let currentSelectedChatId = null; let isConfirmingStatus = false; let currentOrdersFilter = 'active'; let isSuperadminSession = false;
         let newsPhotoBase64 = ""; let shopHeroBase64 = ""; let merchImagesArray = []; let currentMerchVariants = [];
         let globalChatsData = {}; let globalNewsData = []; let globalFeedbackData = []; let globalVolunteersData = [];
         let globalSocialNetworks = []; let globalOrdersData = []; let globalMerchData = []; let globalCategories = [];
         let globalPromocodes = []; let globalReportsData = []; let globalAdminRequests = []; let globalActiveAdmins = [];
+        let globalHubLinks = []; let globalHubClicks = []; // НОВІ ЗМІННІ ДЛЯ ХАБУ
 
         let unsubscribeChats = null; let unsubscribeFeedback = null; let unsubscribeVolunteers = null; let unsubscribeSocials = null;
         let unsubscribeNews = null; let unsubscribeOrders = null; let unsubscribeMerch = null; let unsubscribeConfig = null;
         let unsubscribePromos = null; let unsubscribePaymentConfig = null; let unsubscribeReports = null; let unsubscribeStats = null;
         let unsubscribeStatsReal = null; let unsubscribeAdminRequests = null; let unsubscribeAdmins = null;
+        let unsubscribeHubLinks = null; let unsubscribeHubClicks = null; // НОВІ СЛУХАЧІ
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container'); if(!container) return;
@@ -927,7 +1040,7 @@
         }
 
         function createLocalBackup() {
-            const backupData = { timestamp: new Date().toISOString(), orders: globalOrdersData, merch: globalMerchData, volunteers: globalVolunteersData, news: globalNewsData, reports: globalReportsData, promocodes: globalPromocodes };
+            const backupData = { timestamp: new Date().toISOString(), orders: globalOrdersData, merch: globalMerchData, volunteers: globalVolunteersData, news: globalNewsData, reports: globalReportsData, promocodes: globalPromocodes, hubLinks: globalHubLinks };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2)); const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr); downloadAnchorNode.setAttribute("download", `SVAROG_Backup_${new Date().toLocaleDateString('uk-UA').replace(/\./g, '_')}.json`); document.body.appendChild(downloadAnchorNode); downloadAnchorNode.click(); downloadAnchorNode.remove(); showToast("Резервну копію завантажено!", "success"); logAdminAction("security", "Створено локальний бекап бази");
         }
 
@@ -1069,6 +1182,128 @@
         async function approveAdmin(email, name) { try { await db.collection("admins").doc(email).set({ role: "admin", name: name, addedAt: firebase.firestore.FieldValue.serverTimestamp() }); await db.collection("admin_requests").doc(email).delete(); showToast(`Доступ для ${email} надано!`, "success"); logAdminAction("security", `Схвалив доступ для: ${email}`); } catch(e) { showToast("Помилка: " + e.message, "error"); } }
         async function rejectAdmin(email) { if(confirm(`Відхилити запит від ${email}?`)) { try { await db.collection("admin_requests").doc(email).delete(); showToast("Відхилено.", "warning"); } catch(e) { showToast("Помилка: " + e.message, "error"); } } }
 
+        // === НОВЕ: ХАБ ПОСИЛАНЬ ===
+        async function saveHubLink() {
+            const editId = document.getElementById('edit-hub-id').value;
+            const title = document.getElementById('hub-title').value.trim();
+            const url = document.getElementById('hub-url').value.trim();
+            const icon = document.getElementById('hub-icon').value.trim();
+
+            if (!title || !url) { showToast("Введіть назву та URL!", "warning"); return; }
+
+            const linkObj = { title, url, icon, active: true };
+
+            try {
+                if (editId) {
+                    await db.collection("hub_links").doc(editId).update({ title, url, icon });
+                    showToast("Оновлено!", "success");
+                } else {
+                    linkObj.order = globalHubLinks.length;
+                    await db.collection("hub_links").add(linkObj);
+                    showToast("Додано!", "success");
+                }
+                cancelEditHubLink();
+            } catch (err) { showToast(err.message, "error"); }
+        }
+
+        function startEditHubLink(id) {
+            const link = globalHubLinks.find(l => l.id === id); if(!link) return;
+            document.getElementById('edit-hub-id').value = link.id;
+            document.getElementById('hub-title').value = link.title;
+            document.getElementById('hub-url').value = link.url;
+            document.getElementById('hub-icon').value = link.icon || '';
+            document.getElementById('hub-form-title').innerText = "📝 Редагувати посилання";
+            document.getElementById('hub-submit-btn').innerText = "Зберегти зміни";
+            document.getElementById('hub-cancel-btn').style.display = 'inline-flex';
+        }
+
+        function cancelEditHubLink() {
+            document.getElementById('edit-hub-id').value = "";
+            document.getElementById('hub-title').value = "";
+            document.getElementById('hub-url').value = "";
+            document.getElementById('hub-icon').value = "";
+            document.getElementById('hub-form-title').innerText = "Додати нове посилання";
+            document.getElementById('hub-submit-btn').innerText = "💾 Зберегти";
+            document.getElementById('hub-cancel-btn').style.display = 'none';
+        }
+
+        async function deleteHubLink(id) {
+            if (confirm("Видалити це посилання?")) {
+                try {
+                    await db.collection("hub_links").doc(id).delete();
+                    showToast("Видалено.", "success");
+                } catch(e) { showToast(e.message, "error"); }
+            }
+        }
+
+        async function toggleHubLinkStatus(id, currentStatus) {
+            try { await db.collection("hub_links").doc(id).update({ active: !currentStatus }); showToast("Статус змінено", "success"); }
+            catch(e) { showToast("Помилка", "error"); }
+        }
+
+        async function moveHubLink(id, action) {
+            const index = globalHubLinks.findIndex(l => l.id === id); if (index < 0) return;
+            let newArr = [...globalHubLinks];
+            if (action === 'up' && index > 0) { const item = newArr.splice(index, 1)[0]; newArr.splice(index - 1, 0, item); }
+            else if (action === 'down' && index < newArr.length - 1) { const item = newArr.splice(index, 1)[0]; newArr.splice(index + 1, 0, item); }
+            try {
+                const batch = db.batch();
+                newArr.forEach((itm, i) => batch.update(db.collection("hub_links").doc(itm.id), { order: i }));
+                await batch.commit();
+            } catch(e) { showToast("Помилка", "error"); }
+        }
+
+        function renderHubLinks() {
+            const box = document.getElementById('box-for-hub-links'); if(!box) return;
+            box.innerHTML = "";
+            if (globalHubLinks.length === 0) { box.innerHTML = '<div class="no-msg">Немає посилань</div>'; return; }
+            globalHubLinks.forEach(link => {
+                let checked = link.active ? "checked" : "";
+                let opacity = link.active ? "1" : "0.5";
+                box.innerHTML += `
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:8px; padding:15px; display:flex; justify-content:space-between; align-items:center; opacity:${opacity}; transition:0.3s;">
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <label class="toggle-switch">
+                                <input type="checkbox" ${checked} onchange="toggleHubLinkStatus('${link.id}', ${link.active})">
+                                <span class="slider"></span>
+                            </label>
+                            <div>
+                                <div style="font-weight:bold; font-size:1.1rem;">${link.icon || ''} ${link.title}</div>
+                                <div style="font-size:0.8rem; color:var(--theme-color); margin-top:4px;">${link.url}</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-outline" style="padding:4px 8px; font-size:0.8rem; color:#ccc; border-color:#555;" onclick="moveHubLink('${link.id}', 'up')">⬆️</button>
+                            <button class="btn btn-outline" style="padding:4px 8px; font-size:0.8rem; color:#ccc; border-color:#555;" onclick="moveHubLink('${link.id}', 'down')">⬇️</button>
+                            <button class="btn btn-outline" style="padding:6px 12px; font-size:0.8rem;" onclick="startEditHubLink('${link.id}')">Редаг.</button>
+                            <button class="btn btn-outline" style="border-color:#ff4a4a; color:#ff4a4a; padding:6px 12px; font-size:0.8rem;" onclick="deleteHubLink('${link.id}')">Видал.</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function updateHubAnalytics() {
+            const now = Date.now();
+            const startOfToday = new Date().setHours(0,0,0,0);
+            const startOf7D = now - 7 * 24 * 60 * 60 * 1000;
+            const startOf30D = now - 30 * 24 * 60 * 60 * 1000;
+
+            let tDay = 0, t7 = 0, t30 = 0, tAll = globalHubClicks.length;
+
+            globalHubClicks.forEach(c => {
+                let t = c.timestamp ? c.timestamp.toMillis() : now;
+                if (t >= startOfToday) tDay++;
+                if (t >= startOf7D) t7++;
+                if (t >= startOf30D) t30++;
+            });
+
+            if(document.getElementById('hub-stat-today')) document.getElementById('hub-stat-today').innerText = tDay;
+            if(document.getElementById('hub-stat-7d')) document.getElementById('hub-stat-7d').innerText = t7;
+            if(document.getElementById('hub-stat-30d')) document.getElementById('hub-stat-30d').innerText = t30;
+            if(document.getElementById('hub-stat-all')) document.getElementById('hub-stat-all').innerText = tAll;
+        }
+        // ===================================
+
         // --- FIREBASE LISTENERS ТА ОНОВЛЕННЯ ---
         function initFirebaseRealtimeStreams() {
             try {
@@ -1080,6 +1315,19 @@
                 unsubscribeReports = db.collection("reports").orderBy("timestamp", "desc").onSnapshot(snapshot => { globalReportsData = []; snapshot.forEach(doc => { globalReportsData.push({ id: doc.id, ...doc.data(), isReport: true }); }); renderAdminNewsChronicle(); });
 
                 setupOrderNotifications();
+
+                // НОВЕ: Слухачі Хабу
+                unsubscribeHubLinks = db.collection("hub_links").onSnapshot(snapshot => {
+                    globalHubLinks = [];
+                    snapshot.forEach(doc => globalHubLinks.push({ id: doc.id, ...doc.data() }));
+                    globalHubLinks.sort((a, b) => (a.order || 0) - (b.order || 0));
+                    renderHubLinks();
+                });
+                unsubscribeHubClicks = db.collection("hub_clicks").onSnapshot(snapshot => {
+                    globalHubClicks = [];
+                    snapshot.forEach(doc => globalHubClicks.push({ id: doc.id, ...doc.data() }));
+                    updateHubAnalytics();
+                });
 
                 unsubscribeMerch = db.collection("merch").onSnapshot(snapshot => { globalMerchData = []; snapshot.forEach(doc => { globalMerchData.push({ id: doc.id, ...doc.data() }); }); globalMerchData.sort((a, b) => { let orderA = a.order !== undefined ? a.order : Number.MAX_SAFE_INTEGER; let orderB = b.order !== undefined ? b.order : Number.MAX_SAFE_INTEGER; if (orderA === orderB) { let timeA = a.timestamp ? a.timestamp.toMillis() : 0; let timeB = b.timestamp ? b.timestamp.toMillis() : 0; return timeB - timeA; } return orderA - orderB; }); renderMerchList(); });
                 unsubscribeConfig = db.collection("config").doc("shop").onSnapshot(doc => { const data = doc.exists ? doc.data() : {}; const isActive = data.active !== undefined ? data.active : true; const checkbox = document.getElementById('shop-active-checkbox'); const label = document.getElementById('shop-status-label'); if(checkbox) checkbox.checked = isActive; if(label) { if(isActive) { label.innerText = "Магазин увімкнено"; label.style.color = "var(--theme-color)"; } else { label.innerText = "Магазин вимкнено"; label.style.color = "#ff4a4a"; } } globalCategories = data.categories || []; if(data.heroImage) { shopHeroBase64 = data.heroImage; const heroPreview = document.getElementById('shop-hero-preview-element'); if(heroPreview) { heroPreview.src = data.heroImage; heroPreview.style.display = 'block'; } } renderCategoriesAdmin(); populateCategorySelect(); });
