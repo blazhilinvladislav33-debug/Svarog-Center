@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20 # Прибрали рядок cache: 'npm', тепер lock-файл не потрібен
+          node-version: 20
 
       - name: Install Project Dependencies
         run: npm install
@@ -30,6 +30,7 @@ jobs:
       - name: Compile and Upload to GitHub Releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false # 👈 ВИМИКАЄ ПРИМУСОВИЙ ПІДПИС APPLE ДЛЯ ХМАРИ
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
             npx electron-builder --win -p always
