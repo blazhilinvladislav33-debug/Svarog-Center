@@ -17,8 +17,15 @@ jobs:
         os: [windows-latest, macos-15]
         # macos-15 (не macos-latest) навмисно — з червня 2026 macos-latest
         # це macOS 26 з Xcode 26, який більше НЕ вміє компілювати під
-        # deployment target нижче ~13. macos-15 має Xcode 16.4, який ще
-        # дозволяє низькі таргети (потрібно для підтримки macOS 10.13).
+        # deployment target нижче ~13. macos-15 має Xcode 16.4.
+
+    env:
+      # macos-15 раннер зараз на Apple Silicon (arm64) — без цього
+      # npm install підтягне arm64-версію Electron, яка фізично
+      # не може запускатись на старих Intel Mac (macOS < 11).
+      npm_config_arch: x64
+      npm_config_target_arch: x64
+      MACOSX_DEPLOYMENT_TARGET: "10.13"
 
     steps:
       - name: Checkout Repository
@@ -39,6 +46,6 @@ jobs:
           if [ "$RUNNER_OS" == "Windows" ]; then
             npx electron-builder --win -p always
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            npx electron-builder --mac -p always
+            npx electron-builder --mac --x64 -p always
           fi
         shell: bash
