@@ -14,7 +14,11 @@ jobs:
     strategy:
       fail-fast: false # 👈 ТЕПЕР WINDOWS НЕ СКАСУЄТЬСЯ, ЯКЩО MAC ВПАДЕ!
       matrix:
-        os: [windows-latest, macos-latest]
+        os: [windows-latest, macos-15]
+        # macos-15 (не macos-latest) навмисно — з червня 2026 macos-latest
+        # це macOS 26 з Xcode 26, який більше НЕ вміє компілювати під
+        # deployment target нижче ~13. macos-15 має Xcode 16.4, який ще
+        # дозволяє низькі таргети (потрібно для підтримки macOS 10.13).
 
     steps:
       - name: Checkout Repository
