@@ -576,7 +576,10 @@
             gap: 25px;
             min-width: 0;
         }
-        .content-grid > * { min-width: 0; }
+
+            .content-grid > * {
+                min-width: 0;
+            }
 
         .grid-2 {
             display: grid;
@@ -631,6 +634,7 @@
                 grid-template-columns: minmax(260px, 320px) 1fr;
             }
         }
+
         @media (max-width: 900px) {
             .content-grid {
                 grid-template-columns: 1fr;
@@ -707,7 +711,26 @@
                 <button type="submit" class="btn" id="login-btn-submit" style="width:100%; margin-top:10px;">АВТОРИЗУВАТИСЯ</button>
             </form>
 
-            <button class="btn btn-outline" style="width:100%; margin-top:15px; border-color: #555; color: #aaa;" onclick="requestAdminAccess()">Немає доступу? Надіслати запит</button>
+            <button class="btn btn-outline" style="width:100%; margin-top:15px; border-color: #555; color: #aaa;" onclick="toggleAccessRequestForm()">Немає доступу? Надіслати запит</button>
+            <div id="access-request-form" style="display:none; margin-top:15px; text-align:left;">
+                <div class="form-group"><input type="email" id="req-access-email" class="form-input" placeholder="Ваша електронна пошта"></div>
+                <div class="form-group" style="margin-bottom:0;"><input type="text" id="req-access-name" class="form-input" placeholder="Ваше ПІБ / Позивний"></div>
+                <button class="btn" style="width:100%; margin-top:10px;" onclick="submitAdminAccessRequest()">Відправити запит</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="new-admin-pass-modal">
+        <div class="modal-box" style="max-width:420px; text-align:center;">
+            <div class="modal-header"><span>🔑 Новий адмін створений</span><button class="close-modal-btn" onclick="document.getElementById('new-admin-pass-modal').style.display='none'">✖</button></div>
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">Передайте ці дані новому адміну (Telegram/Viber тощо) — пароль більше ніде не показується.</p>
+            <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:8px; margin-bottom:15px; text-align:left;">
+                <div style="font-size:0.8rem; color:#888;">Логін (email):</div>
+                <div id="new-admin-pass-email" style="font-family:monospace; font-size:1rem; color:#fff; margin-bottom:10px; word-break:break-all;"></div>
+                <div style="font-size:0.8rem; color:#888;">Тимчасовий пароль:</div>
+                <div id="new-admin-pass-value" style="font-family:monospace; font-size:1.3rem; color:var(--theme-color); font-weight:bold;"></div>
+            </div>
+            <button class="btn" style="width:100%;" onclick="copyNewAdminCreds()">📋 Скопіювати логін і пароль</button>
         </div>
     </div>
 
@@ -1122,21 +1145,27 @@
         function enterDashboard() { document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-main').style.display = 'flex'; renderCombatReportAdminGrid(); initFirebaseRealtimeStreams(); generateSizeStockInputs(); document.getElementById('news-date-field').valueAsDate = new Date(); }
 
         // НОВЕ: Функція запиту доступу (реєстрації)
-        async function requestAdminAccess() {
-            const email = prompt("Введіть електронну пошту, яку плануєте використовувати:");
-            if (!email) return;
-            const name = prompt("Введіть ваше ПІБ або Позивний:");
-            if (!name) return;
+        function toggleAccessRequestForm() {
+            const form = document.getElementById('access-request-form');
+            if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
 
+        async function submitAdminAccessRequest() {
+            const email = document.getElementById('req-access-email').value.trim().toLowerCase();
+            const name = document.getElementById('req-access-name').value.trim();
+            if (!email || !name) { showToast("Заповніть обидва поля!", "warning"); return; }
             try {
-                await db.collection("admin_requests").doc(email.toLowerCase().trim()).set({
-                    email: email.toLowerCase().trim(),
-                    name: name.trim(),
+                await db.collection("admin_requests").doc(email).set({
+                    email: email,
+                    name: name,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 showToast("Запит надіслано! Очікуйте підтвердження адміністратором.", "success");
+                document.getElementById('req-access-email').value = "";
+                document.getElementById('req-access-name').value = "";
+                toggleAccessRequestForm();
             } catch(e) {
-                showToast("Помилка відправки запиту", "error");
+                showToast("Помилка відправки запиту: " + e.message, "error");
             }
         }
 
@@ -1241,14 +1270,53 @@
         // --- БЕЗПЕКА (АДМІНИ) ---
         function renderAdminRequests() { const box = document.getElementById('box-for-admin-requests'); if(!box) return; box.innerHTML = ""; if(globalAdminRequests.length === 0) { box.innerHTML = `<div class="no-msg">Нових запитів немає</div>`; return; } globalAdminRequests.forEach(req => { box.innerHTML += `<div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; border-left: 4px solid #ffaa00;"><div style="font-weight:bold; font-size:1.05rem; color:#fff;">${req.name}</div><div style="font-size:0.85rem; color:#aaa; margin-bottom:10px;">✉️ ${req.email}</div><div style="display:flex; gap:10px;"><button class="btn" style="padding:6px 12px; font-size:0.8rem;" onclick="approveAdmin('${req.email}', '${req.name}')">Схвалити</button><button class="btn btn-outline" style="border-color:#ff4a4a; color:#ff4a4a; padding:6px 12px; font-size:0.8rem;" onclick="rejectAdmin('${req.email}')">Відхилити</button></div></div>`; }); }
         function renderActiveAdmins() { const box = document.getElementById('box-for-active-admins'); if(!box) return; box.innerHTML = ""; globalActiveAdmins.forEach(adm => { let badge = adm.role === 'superadmin' ? `<span style="background:#ff4a4a; color:#fff; font-size:0.65rem; padding:2px 6px; border-radius:4px; margin-left:5px;">SUPERADMIN</span>` : `<span style="background:var(--theme-color); color:#000; font-size:0.65rem; padding:2px 6px; border-radius:4px; margin-left:5px;">ADMIN</span>`; box.innerHTML += `<div style="background:rgba(0,0,0,0.3); padding:10px 15px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;"><div><div style="color:#fff; font-weight:bold; font-size:0.9rem;">${adm.name || 'Без імені'} ${badge}</div><div style="color:#888; font-size:0.8rem;">${adm.id}</div></div><button class="btn btn-outline" style="border-color:#ff4a4a; color:#ff4a4a; padding:4px 8px; font-size:0.75rem;" onclick="alert('Видаліть email у Firebase Console -> Authentication.')">✖</button></div>`; }); }
+        function generateTempPassword(length = 12) {
+            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+            let pass = "";
+            for (let i = 0; i < length; i++) pass += chars[Math.floor(Math.random() * chars.length)];
+            return pass;
+        }
+
+        function showNewAdminCredsModal(email, password) {
+            document.getElementById('new-admin-pass-email').innerText = email;
+            document.getElementById('new-admin-pass-value').innerText = password;
+            document.getElementById('new-admin-pass-modal').style.display = 'flex';
+        }
+
+        function copyNewAdminCreds() {
+            const email = document.getElementById('new-admin-pass-email').innerText;
+            const pass = document.getElementById('new-admin-pass-value').innerText;
+            navigator.clipboard.writeText(`Логін: ${email}\nПароль: ${pass}`)
+                .then(() => showToast("Скопійовано в буфер обміну!", "success"))
+                .catch(() => showToast("Не вдалося скопіювати — виділіть текст вручну.", "warning"));
+        }
+
         async function approveAdmin(email, name) {
-            // Новий адмін САМ придумав собі пароль ще на кроці "ЗАПИТ ДОСТУПУ"
-            // (auth.createUserWithEmailAndPassword у auth.html) — акаунт вже існує.
-            // Тут лише видаємо права в базі, нічого пересилати не потрібно.
+            // requestAdminAccess() лише записує заявку (email+ім'я) без пароля,
+            // тож обліковий запис у Firebase Auth ще не існує. Створюємо його тут.
+            // Використовуємо ДРУГИЙ, ізольований екземпляр Firebase — інакше
+            // createUserWithEmailAndPassword() автоматично залогінить нас (суперадміна)
+            // як щойно створеного користувача й вилогінить з поточної сесії.
             try {
+                const tempPassword = generateTempPassword();
+                let secondaryApp;
+                try { secondaryApp = firebase.app("secondary"); }
+                catch (e) { secondaryApp = firebase.initializeApp(firebaseConfig, "secondary"); }
+                const secondaryAuth = secondaryApp.auth();
+
+                try {
+                    await secondaryAuth.createUserWithEmailAndPassword(email, tempPassword);
+                    await secondaryAuth.signOut();
+                } catch (authErr) {
+                    if (authErr.code !== 'auth/email-already-in-use') throw authErr;
+                    // Акаунт вже існував (напр. повторне схвалення) — просто видаємо роль нижче.
+                }
+
                 await db.collection("admins").doc(email).set({ role: "admin", name: name, addedAt: firebase.firestore.FieldValue.serverTimestamp() });
                 await db.collection("admin_requests").doc(email).delete();
-                showToast(`Доступ для ${email} надано! Він вже може увійти своїм паролем.`, "success");
+
+                showNewAdminCredsModal(email, tempPassword);
+                showToast(`Доступ для ${email} надано!`, "success");
                 logAdminAction("security", `Схвалив доступ для: ${email}`);
             } catch(e) {
                 showToast("Помилка: " + e.message, "error");
