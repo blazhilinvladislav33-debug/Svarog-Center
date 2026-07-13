@@ -704,10 +704,6 @@
             <form onsubmit="handleLogin(event)">
                 <div class="form-group"><input type="email" id="user-email" class="form-input" placeholder="Електронна пошта" required autocomplete="email"></div>
                 <div class="form-group"><input type="password" id="user-password" class="form-input" placeholder="Пароль доступу" required></div>
-                <div style="display:flex; align-items:center; gap:8px; margin: 10px 2px 0; text-align:left;">
-                    <input type="checkbox" id="remember-device-checkbox" style="width:16px; height:16px; cursor:pointer;">
-                    <label for="remember-device-checkbox" style="font-size:0.85rem; color:#aaa; cursor:pointer;">Запам'ятати на цьому пристрої</label>
-                </div>
                 <button type="submit" class="btn" id="login-btn-submit" style="width:100%; margin-top:10px;">АВТОРИЗУВАТИСЯ</button>
             </form>
 
@@ -1114,25 +1110,11 @@
             event.preventDefault();
             const emailInp = document.getElementById('user-email').value.trim().toLowerCase();
             const passInp = document.getElementById('user-password').value.trim();
-            const rememberDevice = document.getElementById('remember-device-checkbox').checked;
             const submitBtn = document.getElementById('login-btn-submit');
             submitBtn.innerText = "ПЕРЕВІРКА...";
             submitBtn.disabled = true;
             try {
-                // LOCAL persistence = сесія переживає перезапуск програми (по суті "запам'ятати").
-                // SESSION persistence = вилітає при закритті вікна.
-                // Пароль у відкритому вигляді свідомо НЕ зберігаємо на диску — це небезпечно.
-                await firebase.auth().setPersistence(
-                    rememberDevice ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION
-                );
                 await firebase.auth().signInWithEmailAndPassword(emailInp, passInp);
-                if (rememberDevice) {
-                    localStorage.setItem('rememberedAdminEmail', emailInp);
-                    localStorage.setItem('rememberDevice', '1');
-                } else {
-                    localStorage.removeItem('rememberedAdminEmail');
-                    localStorage.removeItem('rememberDevice');
-                }
                 showToast("Успіх!", "success");
             } catch (e) {
                 showToast("Помилка входу: перевірте дані.", "error");
@@ -1483,12 +1465,6 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             setLanguage(localStorage.getItem('selectedLang') || 'ua');
-            if (localStorage.getItem('rememberDevice') === '1') {
-                const savedEmail = localStorage.getItem('rememberedAdminEmail');
-                if (savedEmail) { const emailField = document.getElementById('user-email'); if (emailField) emailField.value = savedEmail; }
-                const rememberBox = document.getElementById('remember-device-checkbox');
-                if (rememberBox) rememberBox.checked = true;
-            }
         });
     </script>
 </body>
