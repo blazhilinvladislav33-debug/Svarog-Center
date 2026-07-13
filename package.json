@@ -1,6 +1,6 @@
 {
   "name": "svarog-center",
-  "version": "1.1.4",
+  "version": "1.1.7",
   "description": "SVAROG TEAM Command Center",
   "main": "main.js",
   "scripts": {
@@ -33,7 +33,9 @@
       "provider": "github",
       "owner": "blazhilinvladislav33-debug",
       "repo": "Svarog-Center",
-      "private": false
+      "private": false,
+      "draft": false,
+      "releaseType": "release"
     },
     "win": {
       "target": [
