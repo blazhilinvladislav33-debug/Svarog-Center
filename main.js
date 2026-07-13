@@ -99,6 +99,16 @@ app.whenReady().then(() => {
             autoUpdater.checkForUpdatesAndNotify().catch((err) => {
                 console.error("Помилка сервера оновлень:", err);
             });
+
+            // Додатково перевіряємо оновлення періодично, поки програма
+            // залишається відкритою/у треї — щоб реліз на GitHub підхоплювався
+            // "на льоту", без потреби перезапускати SVAROG Center вручну.
+            const UPDATE_CHECK_INTERVAL_MS = 30 * 60 * 1000; // 30 хвилин
+            setInterval(() => {
+                autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+                    console.error("Помилка періодичної перевірки оновлень:", err);
+                });
+            }, UPDATE_CHECK_INTERVAL_MS);
         } else {
             console.log("Режим розробника: оновлення вимкнені");
         }
