@@ -1,6 +1,6 @@
 {
   "name": "svarog-center",
-  "version": "1.1.8",
+  "version": "1.2.0",
   "description": "SVAROG TEAM Command Center",
   "main": "main.js",
   "scripts": {
@@ -19,7 +19,7 @@
     "electron-updater": "^6.1.4"
   },
   "devDependencies": {
-    "electron": "^31.0.0",
+    "electron": "^26.6.10",
     "electron-builder": "^24.13.3"
   },
   "build": {
@@ -45,7 +45,8 @@
       "target": [
         "dmg"
       ],
-      "category": "public.app-category.utilities"
+      "category": "public.app-category.utilities",
+      "minimumSystemVersion": "10.13.0"
     },
     "nsis": {
       "oneClick": false,
