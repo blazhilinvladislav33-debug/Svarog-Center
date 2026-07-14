@@ -1,6 +1,6 @@
 {
   "name": "svarog-center",
-  "version": "1.2.5",
+  "version": "1.2.7",
   "description": "SVAROG TEAM Command Center",
   "main": "main.js",
   "scripts": {
@@ -37,13 +37,18 @@
       "releaseType": "release"
     },
     "win": {
+      "icon": "build/icon.png",
       "target": [
         "nsis"
       ]
     },
     "mac": {
+      "icon": "build/icon.png",
       "target": [
-        "dmg"
+        {
+          "target": "dmg",
+          "arch": ["x64"]
+        }
       ],
       "category": "public.app-category.utilities",
       "minimumSystemVersion": "10.13.0"
