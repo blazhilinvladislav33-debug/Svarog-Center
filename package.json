@@ -1,6 +1,6 @@
 {
   "name": "svarog-center",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "SVAROG TEAM Command Center",
   "main": "main.js",
   "scripts": {
