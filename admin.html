@@ -576,10 +576,24 @@
             gap: 25px;
             min-width: 0;
         }
+        .content-grid > * { min-width: 0; }
 
-            .content-grid > * {
-                min-width: 0;
-            }
+        /* ЖУРНАЛ ДІЙ (перенесено з окремої super_logs.html сторінки) */
+        .logs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; width: 100%; }
+        .log-window { background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color); border-radius: 8px; display: flex; flex-direction: column; height: 400px; }
+        .log-header { background: rgba(255, 255, 255, 0.05); padding: 12px 15px; font-weight: bold; border-bottom: 1px solid var(--border-color); color: var(--theme-color); }
+        .log-body { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .log-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; border-left: 3px solid #888; font-size: 0.85rem; }
+        .log-item.chat { border-color: #00bfff; }
+        .log-item.news { border-color: #ffaa00; }
+        .log-item.shop { border-color: #da70d6; }
+        .log-item.payment { border-color: #00ffcc; }
+        .log-item.orders { border-color: #ff4a4a; }
+        .log-item.security { border-color: var(--theme-color); }
+        .log-meta { display: flex; justify-content: space-between; color: #aaa; margin-bottom: 4px; font-size: 0.75rem; }
+        .log-email { color: #fff; font-weight: bold; }
+        .log-text { color: #ddd; line-height: 1.4; }
+        @media (max-width: 900px) { .logs-grid { grid-template-columns: 1fr; } }
 
         .grid-2 {
             display: grid;
@@ -634,7 +648,6 @@
                 grid-template-columns: minmax(260px, 320px) 1fr;
             }
         }
-
         @media (max-width: 900px) {
             .content-grid {
                 grid-template-columns: 1fr;
@@ -768,6 +781,7 @@
                 <button class="nav-item" onclick="switchTab('volunteer-tab', this, '📋 Анкети волонтерів')"><div class="nav-item-left"><span>📋</span> <span>Волонтери</span></div><div class="nav-badge" id="badge-volunteers">0</div></button>
                 <button class="nav-item" onclick="switchTab('archive-tab', this, '🗄️ Архів бази даних')"><div class="nav-item-left"><span>🗄️</span> <span>Архів</span></div></button>
                 <button class="nav-item" id="superadmin-only-tab-btn" onclick="switchTab('admin-management-tab', this, '⚙️ Безпека')" style="display:none; margin-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); border-radius: 0;"><div class="nav-item-left"><span>⚙️</span> <span>Безпека</span></div></button>
+                <button class="nav-item" id="logs-only-tab-btn" onclick="switchTab('logs-tab', this, '📜 Журнал дій')" style="display:none;"><div class="nav-item-left"><span>📜</span> <span>Журнал дій</span></div></button>
             </div>
             <div class="sidebar-footer"><div style="font-size: 0.75rem; color: #888; text-align: center; margin-bottom: 10px;" id="current-admin-email">admin@svarog.com</div><button class="logout-btn" onclick="handleLogout()">🚪 Вийти з системи</button></div>
         </aside>
@@ -957,6 +971,35 @@
                     </div>
                 </div>
 
+                <div id="logs-tab" class="tab-content">
+                    <div class="logs-grid">
+                        <div class="log-window">
+                            <div class="log-header">💬 Анонімні чати</div>
+                            <div class="log-body" id="logs-chat">Завантаження...</div>
+                        </div>
+                        <div class="log-window">
+                            <div class="log-header">📰 Публікації (Новини/Звіти)</div>
+                            <div class="log-body" id="logs-news">Завантаження...</div>
+                        </div>
+                        <div class="log-window">
+                            <div class="log-header">🛍️ Магазин (Товари/Промокоди)</div>
+                            <div class="log-body" id="logs-shop">Завантаження...</div>
+                        </div>
+                        <div class="log-window">
+                            <div class="log-header">📦 Замовлення</div>
+                            <div class="log-body" id="logs-orders">Завантаження...</div>
+                        </div>
+                        <div class="log-window">
+                            <div class="log-header">🔐 Безпека (доступи адмінів)</div>
+                            <div class="log-body" id="logs-security">Завантаження...</div>
+                        </div>
+                        <div class="log-window">
+                            <div class="log-header">⚙️ Реквізити та Налаштування</div>
+                            <div class="log-body" id="logs-payment">Завантаження...</div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
@@ -976,13 +1019,45 @@
         let unsubscribeNews = null; let unsubscribeOrders = null; let unsubscribeMerch = null; let unsubscribeConfig = null;
         let unsubscribePromos = null; let unsubscribePaymentConfig = null; let unsubscribeReports = null; let unsubscribeStats = null;
         let unsubscribeStatsReal = null; let unsubscribeAdminRequests = null; let unsubscribeAdmins = null;
-        let unsubscribeHubLinks = null; let unsubscribeHubClicks = null;
+        let unsubscribeHubLinks = null; let unsubscribeHubClicks = null; let unsubscribeLogs = null;
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container'); if(!container) return;
             const toast = document.createElement('div'); toast.className = `toast ${type}`;
             let icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : '⚠️'); toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
             container.appendChild(toast); setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 400); }, 4000);
+        }
+
+        function startListeningToLogs() {
+            if (unsubscribeLogs) return; // вже слухаємо
+            unsubscribeLogs = db.collection("admin_logs")
+                .orderBy("timestamp", "desc")
+                .limit(200)
+                .onSnapshot(snapshot => {
+                    const logs = { chat: [], news: [], shop: [], orders: [], security: [], payment: [] };
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const type = data.actionType || 'system';
+                        if (logs[type]) logs[type].push(data);
+                        else logs.payment.push(data);
+                    });
+                    renderLogWindow('logs-chat', logs.chat, 'chat');
+                    renderLogWindow('logs-news', logs.news, 'news');
+                    renderLogWindow('logs-shop', logs.shop, 'shop');
+                    renderLogWindow('logs-orders', logs.orders, 'orders');
+                    renderLogWindow('logs-security', logs.security, 'security');
+                    renderLogWindow('logs-payment', logs.payment, 'payment');
+                }, err => console.error("Помилка читання логів:", err));
+        }
+
+        function renderLogWindow(elementId, dataArray, cssClass) {
+            const box = document.getElementById(elementId);
+            if (!box) return;
+            if (dataArray.length === 0) { box.innerHTML = `<div style="color:#666; text-align:center; margin-top:20px;">Записів немає</div>`; return; }
+            box.innerHTML = dataArray.map(log => {
+                const timeStr = log.timestamp ? new Date(log.timestamp.toMillis()).toLocaleString('uk-UA') : "Невідомо";
+                return `<div class="log-item ${cssClass}"><div class="log-meta"><span class="log-email">${log.adminEmail}</span><span>${timeStr}</span></div><div class="log-text">${log.details}</div></div>`;
+            }).join('');
         }
 
         function switchTab(tabId, btnElement, titleText) {
@@ -1097,8 +1172,8 @@
         // --- АВТОРИЗАЦІЯ ТА ЗАПИТ ДОСТУПУ ---
         async function checkAdminAccess(userEmail) {
             if (!userEmail) return false; const emailClean = userEmail.trim().toLowerCase();
-            if (emailClean === 'svarogteam35@gmail.com') { isSuperadminSession = true; const b = document.getElementById('superadmin-only-tab-btn'); if(b) b.style.display = 'flex'; return true; }
-            try { const adminDoc = await db.collection("admins").doc(emailClean).get(); if (adminDoc.exists) { const role = adminDoc.data().role; if (role === "admin" || role === "superadmin") { isSuperadminSession = (role === "superadmin"); const b = document.getElementById('superadmin-only-tab-btn'); if(b) b.style.display = isSuperadminSession ? 'flex' : 'none'; return true; } } } catch (e) { console.error(e); } return false;
+            if (emailClean === 'svarogteam35@gmail.com') { isSuperadminSession = true; const b = document.getElementById('superadmin-only-tab-btn'); if(b) b.style.display = 'flex'; const l = document.getElementById('logs-only-tab-btn'); if(l) l.style.display = 'flex'; return true; }
+            try { const adminDoc = await db.collection("admins").doc(emailClean).get(); if (adminDoc.exists) { const role = adminDoc.data().role; if (role === "admin" || role === "superadmin") { isSuperadminSession = (role === "superadmin"); const b = document.getElementById('superadmin-only-tab-btn'); if(b) b.style.display = isSuperadminSession ? 'flex' : 'none'; const l = document.getElementById('logs-only-tab-btn'); if(l) l.style.display = isSuperadminSession ? 'flex' : 'none'; return true; } } } catch (e) { console.error(e); } return false;
         }
 
         firebase.auth().onAuthStateChanged(async (user) => {
@@ -1286,19 +1361,27 @@
                 catch (e) { secondaryApp = firebase.initializeApp(firebaseConfig, "secondary"); }
                 const secondaryAuth = secondaryApp.auth();
 
+                let accountAlreadyExisted = false;
                 try {
                     await secondaryAuth.createUserWithEmailAndPassword(email, tempPassword);
                     await secondaryAuth.signOut();
                 } catch (authErr) {
                     if (authErr.code !== 'auth/email-already-in-use') throw authErr;
-                    // Акаунт вже існував (напр. повторне схвалення) — просто видаємо роль нижче.
+                    // Акаунт вже існував — пароль вище НЕ встановився, тому його
+                    // не можна показувати як дійсний. Клієнтський SDK не вміє
+                    // скинути пароль чужого акаунту без старого пароля.
+                    accountAlreadyExisted = true;
                 }
 
                 await db.collection("admins").doc(email).set({ role: "admin", name: name, addedAt: firebase.firestore.FieldValue.serverTimestamp() });
                 await db.collection("admin_requests").doc(email).delete();
 
-                showNewAdminCredsModal(email, tempPassword);
-                showToast(`Доступ для ${email} надано!`, "success");
+                if (accountAlreadyExisted) {
+                    showToast(`Доступ для ${email} надано! Акаунт вже існував — пароль НЕ змінювався, людина заходить своїм старим паролем.`, "warning");
+                } else {
+                    showNewAdminCredsModal(email, tempPassword);
+                    showToast(`Доступ для ${email} надано!`, "success");
+                }
                 logAdminAction("security", `Схвалив доступ для: ${email}`);
             } catch(e) {
                 showToast("Помилка: " + e.message, "error");
@@ -1459,7 +1542,7 @@
                 unsubscribePaymentConfig = db.collection("config").doc("payment").onSnapshot(doc => { if (doc.exists) { const data = doc.data(); const bankInp = document.getElementById('new-donation-link-field'); if(data.bankUrl && bankInp) bankInp.value = data.bankUrl; const cardNumInp = document.getElementById('config-card-number'); if(data.cardNumber && cardNumInp) cardNumInp.value = data.cardNumber; const cardNameInp = document.getElementById('config-card-name'); if(data.cardName && cardNameInp) cardNameInp.value = data.cardName; } });
                 unsubscribeStats = db.collection("config").doc("combat_report").onSnapshot(doc => { if (doc.exists) { const data = doc.data(); const details = data.details || {}; if(document.getElementById('cr-strike')) document.getElementById('cr-strike').value = data.strikeSorties || 0; if(document.getElementById('cr-recon')) document.getElementById('cr-recon').value = data.reconSorties || 0; combatCategories.forEach(cat => { const hitInp = document.getElementById(`cr_${cat.id}_hit`); const destInp = document.getElementById(`cr_${cat.id}_dest`); if(hitInp) hitInp.value = details[`${cat.id}_hit`] || 0; if(destInp) destInp.value = details[`${cat.id}_dest`] || 0; }); calculateTotals(); } });
                 unsubscribeStatsReal = db.collection("config").doc("statistics").onSnapshot(doc => { if(doc.exists && document.getElementById('cr-funds')) document.getElementById('cr-funds').value = doc.data().funds || 0; });
-                if (isSuperadminSession) { unsubscribeAdminRequests = db.collection("admin_requests").onSnapshot(snapshot => { globalAdminRequests = []; snapshot.forEach(doc => { globalAdminRequests.push({ id: doc.id, ...doc.data() }); }); renderAdminRequests(); }); unsubscribeAdmins = db.collection("admins").onSnapshot(snapshot => { globalActiveAdmins = []; snapshot.forEach(doc => { globalActiveAdmins.push({ id: doc.id, ...doc.data() }); }); renderActiveAdmins(); }); }
+                if (isSuperadminSession) { unsubscribeAdminRequests = db.collection("admin_requests").onSnapshot(snapshot => { globalAdminRequests = []; snapshot.forEach(doc => { globalAdminRequests.push({ id: doc.id, ...doc.data() }); }); renderAdminRequests(); }); unsubscribeAdmins = db.collection("admins").onSnapshot(snapshot => { globalActiveAdmins = []; snapshot.forEach(doc => { globalActiveAdmins.push({ id: doc.id, ...doc.data() }); }); renderActiveAdmins(); }); startListeningToLogs(); }
             } catch (globalError) { console.error("Помилка БД:", globalError); showToast("Критична помилка завантаження бази даних", "error"); }
         }
 
