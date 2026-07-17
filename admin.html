@@ -1085,6 +1085,18 @@
                                 <div class="grid-2"><button class="btn btn-outline" id="soc-submit-btn" onclick="addNewSocialNetwork()">Зберегти</button><button class="btn btn-outline" id="soc-cancel-edit-btn" style="display:none; border-color:#ff4a4a; color:#ff4a4a;" onclick="cancelSocEditing()">Скасувати</button></div>
                                 <div id="box-for-social-list" style="margin-top:20px; display:flex; flex-direction:column; gap:8px;"></div>
                             </div>
+                            <div class="admin-card" style="border-color: #00ffcc;">
+                                <h3 class="card-title" style="color:#00ffcc; border-bottom-color: rgba(0, 255, 204, 0.3);">📸 Фото фону головної сторінки</h3>
+                                <p style="font-size:0.8rem; color:#aaa; margin-bottom:10px;">Можна завантажити скільки завгодно фото — вони будуть по черзі плавно змінюватись на головній сторінці сайту.</p>
+                                <div class="form-group"><input type="file" id="hero-images-file" accept="image/*" multiple class="form-input" onchange="addHeroImages(this)" style="padding: 8px;"></div>
+                                <div id="hero-images-preview-box" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;"></div>
+                                <button class="btn btn-outline" style="width:100%; border-color:#00ffcc; color:#00ffcc;" onclick="saveHeroImages()">Зберегти фото фону</button>
+                            </div>
+                            <div class="admin-card" style="border-color: #ffaa00;">
+                                <h3 class="card-title" style="color:#ffaa00; border-bottom-color: rgba(255, 170, 0, 0.3);">🖼️ Фон інших сторінок</h3>
+                                <p style="font-size:0.8rem; color:#aaa; margin-bottom:12px;">По одному фото на сторінку (не декілька, як на головній). З'являється замість заглушки одразу під заголовком.</p>
+                                <div id="page-backgrounds-list" style="display:flex; flex-direction:column; gap:14px;"></div>
+                            </div>
                             <div class="admin-card" style="border-color: #00bfff;">
                                 <h3 class="card-title" style="color:#00bfff; border-bottom-color: rgba(0, 191, 255, 0.3);">🖼️ Банер магазину</h3>
                                 <div class="form-group"><input type="file" id="shop-hero-file" accept="image/*" class="form-input" onchange="previewShopHero(this)" style="padding: 8px;"><img id="shop-hero-preview-element" src="" style="width:100%; max-height:120px; object-fit:cover; margin-top:10px; border-radius:8px; display:none;"></div>
@@ -1167,7 +1179,7 @@
         let globalHubLinks = []; let globalHubClicks = [];
 
         let unsubscribeChats = null; let unsubscribeFeedback = null; let unsubscribeVolunteers = null; let unsubscribeSocials = null;
-        let unsubscribeRecruiting = null; let unsubscribeNewsletter = null; let unsubscribeSizeCharts = null;
+        let unsubscribeRecruiting = null; let unsubscribeNewsletter = null; let unsubscribeSizeCharts = null; let unsubscribePageBackgrounds = null;
         let unsubscribeNews = null; let unsubscribeOrders = null; let unsubscribeMerch = null; let unsubscribeConfig = null;
         let unsubscribePromos = null; let unsubscribePaymentConfig = null; let unsubscribeReports = null; let unsubscribeStats = null;
         let unsubscribeStatsReal = null; let unsubscribeAdminRequests = null; let unsubscribeAdmins = null;
@@ -1840,6 +1852,59 @@
         function toggleMediaInput() { const type = document.getElementById('news-media-type').value; document.getElementById('news-photo-zone').style.display = type === 'image' ? 'block' : 'none'; document.getElementById('news-video-zone').style.display = type === 'video' ? 'block' : 'none'; }
         function previewNewsPhoto(input) { if (input.files && input.files[0]) { getCompressedBase64(input.files[0]).then(base64 => { newsPhotoBase64 = base64; newsImagePosition = "50% 50%"; const img = document.getElementById('news-preview-element'); if(img){ img.src = newsPhotoBase64; img.style.display = 'block'; } document.getElementById('news-position-hint').style.display = 'block'; attachPositionPicker('news-preview-element', 'news-position-marker', newsImagePosition, (pos) => { newsImagePosition = pos; }); }); } }
         function previewShopHero(input) { if (input.files && input.files[0]) { getCompressedBase64(input.files[0], 1600).then(base64 => { shopHeroBase64 = base64; const img = document.getElementById('shop-hero-preview-element'); if(img){ img.src = shopHeroBase64; img.style.display = 'block'; } }); } }
+
+        // ==================== ФОТО ФОНУ ГОЛОВНОЇ (кілька, по черзі) ====================
+        let heroImagesArray = [];
+        function renderHeroImagesPreview() {
+            const box = document.getElementById('hero-images-preview-box'); if (!box) return;
+            box.innerHTML = heroImagesArray.map((src, i) => `<div style="position:relative;"><img src="${src}" style="width:70px; height:70px; object-fit:cover; border-radius:6px; border:1px solid rgba(255,255,255,0.2);"><button onclick="removeHeroImage(${i})" style="position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:#ff4a4a; color:#fff; border:none; cursor:pointer; font-size:12px; line-height:1;">✕</button></div>`).join('');
+        }
+        async function addHeroImages(input) {
+            if (!input.files || input.files.length === 0) return;
+            for (let file of input.files) { let base64 = await getCompressedBase64(file, 1920); heroImagesArray.push(base64); }
+            renderHeroImagesPreview(); input.value = '';
+        }
+        function removeHeroImage(index) { heroImagesArray.splice(index, 1); renderHeroImagesPreview(); }
+        async function saveHeroImages() {
+            try { await db.collection("config").doc("heroImages").set({ images: heroImagesArray }, { merge: true }); showToast("Фото фону збережено!", "success"); logAdminAction("settings", "Оновив фото фону головної сторінки"); }
+            catch(e) { showToast(e.message, "error"); }
+        }
+
+        // ==================== ФОН ІНШИХ СТОРІНОК (по одному) ====================
+        const PAGE_BG_LIST = [
+            { key: 'about', label: 'Про нас' },
+            { key: 'news', label: 'Новини' },
+            { key: 'recruiting', label: 'Рекрутинг' },
+            { key: 'contacts', label: 'Контакти' },
+            { key: 'support', label: 'Підтримати' }
+        ];
+        let globalPageBackgrounds = {};
+        function renderPageBackgroundsAdmin() {
+            const box = document.getElementById('page-backgrounds-list'); if (!box) return;
+            box.innerHTML = PAGE_BG_LIST.map(p => {
+                const current = globalPageBackgrounds[p.key];
+                return `<div style="display:flex; align-items:center; gap:12px;">
+                    <img src="${current || ''}" style="width:52px; height:52px; object-fit:cover; border-radius:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); display:${current ? 'block' : 'none'};" id="pagebg-preview-${p.key}">
+                    <div style="flex:1;">
+                        <div style="font-size:0.85rem; margin-bottom:4px;">${p.label}</div>
+                        <input type="file" accept="image/*" style="font-size:0.75rem;" onchange="uploadPageBackground('${p.key}', this)">
+                    </div>
+                    ${current ? `<button onclick="removePageBackground('${p.key}')" style="background:none; border:1px solid #ff4a4a; color:#ff4a4a; border-radius:6px; padding:4px 10px; cursor:pointer; font-size:0.75rem;">✕</button>` : ''}
+                </div>`;
+            }).join('');
+        }
+        async function uploadPageBackground(key, input) {
+            if (!input.files || !input.files[0]) return;
+            try {
+                const base64 = await getCompressedBase64(input.files[0], 1920);
+                await db.collection("config").doc("pageBackgrounds").set({ [key]: base64 }, { merge: true });
+                showToast("Фон збережено!", "success"); logAdminAction("settings", `Оновив фон сторінки: ${key}`);
+            } catch(e) { showToast(e.message, "error"); }
+        }
+        async function removePageBackground(key) {
+            if (!confirm("Прибрати фото фону для цієї сторінки?")) return;
+            try { await db.collection("config").doc("pageBackgrounds").update({ [key]: firebase.firestore.FieldValue.delete() }); showToast("Прибрано.", "success"); } catch(e) { showToast(e.message, "error"); }
+        }
         async function saveShopHeroImage() { if(!shopHeroBase64) { showToast("Оберіть файл!", "warning"); return; } try { await db.collection("config").doc("shop").set({ heroImage: shopHeroBase64 }, { merge: true }); showToast("Банер оновлено!", "success"); } catch(e) { showToast(e.message, "error"); } }
         async function savePaymentCredentials() { const bankUrl = document.getElementById('new-donation-link-field').value.trim(); const cardNumber = document.getElementById('config-card-number').value.trim(); const cardName = document.getElementById('config-card-name').value.trim(); try { await db.collection("config").doc("payment").set({ bankUrl, cardNumber, cardName }, { merge: true }); showToast("Збережено!", "success"); logAdminAction("payment", "Оновив платіжні реквізити"); } catch(e) { showToast(e.message, "error"); } }
         async function addNewSocialNetwork() { const editId = document.getElementById('edit-soc-id').value; const name = document.getElementById('soc-name').value.trim(); const url = document.getElementById('soc-url').value.trim(); const color = document.getElementById('soc-color').value; if(!name || !url) { showToast("Заповніть!", "warning"); return; } let updatedList = [...globalSocialNetworks]; if(editId) { let i = updatedList.findIndex(n => n.id === editId); if(i > -1) updatedList[i] = { id: editId, name, url, color }; } else { updatedList.push({ id: 'soc_' + Date.now(), name, url, color }); } try { await db.collection("config").doc("socials").set({ list: updatedList }); cancelSocEditing(); showToast("Збережено!", "success"); logAdminAction("payment", `${editId ? 'Відредагував' : 'Додав'} соцмережу: ${name}`); } catch(e) { showToast(e.message, "error"); } }
@@ -2262,6 +2327,8 @@
 
                 unsubscribeMerch = db.collection("merch").onSnapshot(snapshot => { globalMerchData = []; globalTrashItems.merch = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.deletedAt) { globalTrashItems.merch.push(d); return; } globalMerchData.push(d); }); globalMerchData.sort((a, b) => { let orderA = a.order !== undefined ? a.order : Number.MAX_SAFE_INTEGER; let orderB = b.order !== undefined ? b.order : Number.MAX_SAFE_INTEGER; if (orderA === orderB) { let timeA = a.timestamp ? a.timestamp.toMillis() : 0; let timeB = b.timestamp ? b.timestamp.toMillis() : 0; return timeB - timeA; } return orderA - orderB; }); renderMerchList(); checkLowStock(); renderTrashTab(); });
                 unsubscribeConfig = db.collection("config").doc("shop").onSnapshot(doc => { const data = doc.exists ? doc.data() : {}; const isActive = data.active !== undefined ? data.active : true; const checkbox = document.getElementById('shop-active-checkbox'); const label = document.getElementById('shop-status-label'); if(checkbox) checkbox.checked = isActive; if(label) { if(isActive) { label.innerText = "Магазин увімкнено"; label.style.color = "var(--theme-color)"; } else { label.innerText = "Магазин вимкнено"; label.style.color = "#ff4a4a"; } } globalCategories = data.categories || []; if(data.heroImage) { shopHeroBase64 = data.heroImage; const heroPreview = document.getElementById('shop-hero-preview-element'); if(heroPreview) { heroPreview.src = data.heroImage; heroPreview.style.display = 'block'; } } renderCategoriesAdmin(); populateCategorySelect(); });
+                db.collection("config").doc("heroImages").get().then(doc => { if (doc.exists && Array.isArray(doc.data().images)) { heroImagesArray = doc.data().images; renderHeroImagesPreview(); } }).catch(e => console.error("Фото фону головної:", e));
+                unsubscribePageBackgrounds = db.collection("config").doc("pageBackgrounds").onSnapshot(doc => { globalPageBackgrounds = doc.exists ? doc.data() : {}; renderPageBackgroundsAdmin(); });
                 unsubscribePromos = db.collection("promocodes").orderBy("created", "desc").onSnapshot(snapshot => { globalPromocodes = []; globalTrashItems.promocodes = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.deletedAt) globalTrashItems.promocodes.push(d); else globalPromocodes.push(d); }); renderPromocodes(); renderTrashTab(); });
                 unsubscribePaymentConfig = db.collection("config").doc("payment").onSnapshot(doc => { if (doc.exists) { const data = doc.data(); const bankInp = document.getElementById('new-donation-link-field'); if(data.bankUrl && bankInp) bankInp.value = data.bankUrl; const cardNumInp = document.getElementById('config-card-number'); if(data.cardNumber && cardNumInp) cardNumInp.value = data.cardNumber; const cardNameInp = document.getElementById('config-card-name'); if(data.cardName && cardNameInp) cardNameInp.value = data.cardName; } });
                 unsubscribeStats = db.collection("config").doc("combat_report").onSnapshot(doc => { if (doc.exists) { const data = doc.data(); const details = data.details || {}; if(document.getElementById('cr-strike')) document.getElementById('cr-strike').value = data.strikeSorties || 0; if(document.getElementById('cr-recon')) document.getElementById('cr-recon').value = data.reconSorties || 0; combatCategories.forEach(cat => { const hitInp = document.getElementById(`cr_${cat.id}_hit`); const destInp = document.getElementById(`cr_${cat.id}_dest`); if(hitInp) hitInp.value = details[`${cat.id}_hit`] || 0; if(destInp) destInp.value = details[`${cat.id}_dest`] || 0; }); calculateTotals(); } });
