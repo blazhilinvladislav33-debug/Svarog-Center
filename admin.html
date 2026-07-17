@@ -704,6 +704,23 @@
                 transform: translateX(20px);
                 background-color: var(--theme-color);
             }
+
+            /* ==================== КОНСТРУКТОР СТОРІНКИ (canvas) ==================== */
+            .constructor-mode-toggle { display: flex; gap: 10px; margin-bottom: 12px; }
+            .constructor-mode-btn { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: transparent; color: #aaa; cursor: pointer; font-size: 0.85rem; }
+            .constructor-mode-btn.active { background: var(--theme-color); color: #fff; border-color: var(--theme-color); }
+            .constructor-toolbar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+            .constructor-toolbar button { padding: 6px 14px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); color: #fff; cursor: pointer; }
+            .constructor-toolbar button:hover { border-color: var(--theme-color); color: var(--theme-color); }
+            .constructor-canvas { position: relative; width: 100%; min-height: 700px; background: repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 40px), repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 40px); background-color: #0a0a0c; border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; overflow: hidden; }
+            .cblock { position: absolute; box-sizing: border-box; border: 1px solid rgba(0,191,255,0.4); background: rgba(20,20,25,0.92); border-radius: 4px; cursor: move; overflow: hidden; display: flex; flex-direction: column; }
+            .cblock.selected { border-color: #00bfff; box-shadow: 0 0 0 2px rgba(0,191,255,0.3); }
+            .cblock-bar { display: flex; justify-content: space-between; align-items: center; background: rgba(0,191,255,0.12); padding: 3px 8px; font-size: 0.7rem; color: #00bfff; flex-shrink: 0; cursor: move; }
+            .cblock-bar button { background: none; border: none; color: #ff4a4a; cursor: pointer; font-size: 0.85rem; padding: 0 4px; }
+            .cblock-body { flex: 1; padding: 8px; overflow: auto; font-size: 0.8rem; color: #ddd; }
+            .cblock-body textarea, .cblock-body input { width: 100%; height: 100%; background: transparent; border: none; color: #fff; resize: none; font-size: 0.85rem; font-family: inherit; }
+            .cblock-body img { width: 100%; height: 100%; object-fit: cover; }
+            .cblock-resize-handle { position: absolute; bottom: 0; right: 0; width: 14px; height: 14px; cursor: nwse-resize; background: linear-gradient(135deg, transparent 50%, #00bfff 50%); }
     </style>
 </head>
 <body>
@@ -1020,7 +1037,21 @@
                                 </div>
                                 <div class="form-group" id="news-video-zone" style="display:none; margin-top: 15px;"><input type="url" id="news-video-url" class="form-input" placeholder="Посилання на YouTube"></div>
                                 <div class="form-group"><input type="text" id="news-title-field" class="form-input" placeholder="Заголовок"></div>
-                                <div class="form-group"><textarea id="news-body-field" class="form-input" placeholder="Текст публікації..."></textarea></div><div class="form-group"><input type="date" id="news-date-field" class="form-input"></div>
+                                <div class="constructor-mode-toggle">
+                                    <button type="button" class="constructor-mode-btn active" id="mode-btn-simple" onclick="setBodyMode('simple')">📝 Простий текст</button>
+                                    <button type="button" class="constructor-mode-btn" id="mode-btn-constructor" onclick="setBodyMode('constructor')">🎨 Конструктор</button>
+                                </div>
+                                <div class="form-group" id="news-body-simple-zone"><textarea id="news-body-field" class="form-input" placeholder="Текст публікації..."></textarea></div>
+                                <div id="news-body-constructor-zone" style="display:none;">
+                                    <div class="constructor-toolbar">
+                                        <button type="button" onclick="addConstructorBlock('text')">+ Текст</button>
+                                        <button type="button" onclick="addConstructorBlock('photo')">+ Фото</button>
+                                        <button type="button" onclick="addConstructorBlock('quote')">+ Цитата</button>
+                                        <button type="button" onclick="addConstructorBlock('video')">+ Відео</button>
+                                    </div>
+                                    <div class="constructor-canvas" id="constructor-canvas"></div>
+                                </div>
+                                <div class="form-group"><input type="date" id="news-date-field" class="form-input"></div>
 
                                 <div id="news-tags-quote-zone">
                                     <div class="form-group"><label class="form-label">Теги (через кому):</label><input type="text" id="news-tags-field" class="form-input" placeholder="35 полк, піхота, безпілотники"></div>
@@ -1854,11 +1885,104 @@
         function addReportLinkRow() { reportLinksArray.push({ title: '', url: '' }); renderReportLinksList(); }
         function removeReportLinkRow(index) { reportLinksArray.splice(index, 1); renderReportLinksList(); }
 
-        async function publishNewsItem() { const editId = document.getElementById('edit-news-id').value; const publishType = document.getElementById('news-publish-type').value; const mediaType = document.getElementById('news-media-type').value; const title = document.getElementById('news-title-field').value.trim(); const bodyText = document.getElementById('news-body-field').value.trim(); const date = document.getElementById('news-date-field').value; if (publishType === 'news' && !title) { showToast("Введіть заголовок!", "warning"); return; } if (!bodyText) { showToast("Введіть текст!", "warning"); return; }
+                // ==================== КОНСТРУКТОР СТОРІНКИ (canvas, вільне перетягування) ====================
+        let bodyMode = 'simple';
+        let constructorBlocks = [];
+        let selectedBlockId = null;
+
+        function setBodyMode(mode) {
+            bodyMode = mode;
+            document.getElementById('mode-btn-simple').classList.toggle('active', mode === 'simple');
+            document.getElementById('mode-btn-constructor').classList.toggle('active', mode === 'constructor');
+            document.getElementById('news-body-simple-zone').style.display = mode === 'simple' ? 'block' : 'none';
+            document.getElementById('news-body-constructor-zone').style.display = mode === 'constructor' ? 'block' : 'none';
+        }
+
+        function addConstructorBlock(type) {
+            const id = 'b' + Date.now() + Math.floor(Math.random() * 1000);
+            let block = { id, type, x: 10, y: 10, width: 40, height: 20 };
+            if (type === 'text') { block.content = ''; block.height = 15; }
+            if (type === 'photo') { block.src = ''; block.height = 30; }
+            if (type === 'quote') { block.text = ''; block.author = ''; block.role = ''; block.height = 22; }
+            if (type === 'video') { block.videoUrl = ''; block.height = 25; }
+            constructorBlocks.push(block);
+            renderConstructorCanvas();
+        }
+        function deleteConstructorBlock(id) { constructorBlocks = constructorBlocks.filter(b => b.id !== id); renderConstructorCanvas(); }
+
+        function renderConstructorCanvas() {
+            const canvas = document.getElementById('constructor-canvas'); if (!canvas) return;
+            canvas.innerHTML = '';
+            constructorBlocks.forEach(block => {
+                const el = document.createElement('div');
+                el.className = 'cblock' + (block.id === selectedBlockId ? ' selected' : '');
+                el.style.left = block.x + '%'; el.style.top = block.y + '%'; el.style.width = block.width + '%'; el.style.height = block.height + '%';
+                el.dataset.blockId = block.id;
+
+                let bodyHtml = '';
+                let typeLabel = { text: '📝 Текст', photo: '🖼 Фото', quote: '💬 Цитата', video: '🎬 Відео' }[block.type];
+                if (block.type === 'text') bodyHtml = `<textarea placeholder="Введіть текст...">${block.content || ''}</textarea>`;
+                else if (block.type === 'photo') bodyHtml = block.src ? `<img src="${block.src}">` : `<input type="file" accept="image/*" style="height:auto;">`;
+                else if (block.type === 'quote') bodyHtml = `<div style="display:flex; flex-direction:column; gap:4px; height:100%;"><textarea placeholder="Текст цитати" style="flex:1;">${block.text || ''}</textarea><input type="text" placeholder="Автор" value="${block.author || ''}" data-field="author"><input type="text" placeholder="Посада" value="${block.role || ''}" data-field="role"></div>`;
+                else if (block.type === 'video') bodyHtml = `<input type="text" placeholder="Посилання YouTube" value="${block.videoUrl || ''}">`;
+
+                el.innerHTML = `<div class="cblock-bar"><span>${typeLabel}</span><button type="button" onclick="deleteConstructorBlock('${block.id}')">✕</button></div><div class="cblock-body">${bodyHtml}</div><div class="cblock-resize-handle"></div>`;
+                canvas.appendChild(el);
+
+                // Збереження контенту при введенні
+                if (block.type === 'text') { el.querySelector('textarea').addEventListener('input', e => { block.content = e.target.value; }); }
+                else if (block.type === 'photo') { const fileInp = el.querySelector('input[type=file]'); if (fileInp) fileInp.addEventListener('change', async e => { if (e.target.files[0]) { block.src = await getCompressedBase64(e.target.files[0]); renderConstructorCanvas(); } }); }
+                else if (block.type === 'quote') { el.querySelector('textarea').addEventListener('input', e => { block.text = e.target.value; }); el.querySelectorAll('input').forEach(inp => inp.addEventListener('input', e => { block[e.target.dataset.field] = e.target.value; })); }
+                else if (block.type === 'video') { el.querySelector('input').addEventListener('input', e => { block.videoUrl = e.target.value; }); }
+
+                makeBlockDraggable(el, block, canvas);
+                makeBlockResizable(el, block, canvas);
+                el.addEventListener('mousedown', () => { selectedBlockId = block.id; canvas.querySelectorAll('.cblock').forEach(b => b.classList.remove('selected')); el.classList.add('selected'); });
+            });
+        }
+
+        function makeBlockDraggable(el, block, canvas) {
+            const bar = el.querySelector('.cblock-bar');
+            bar.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                const canvasRect = canvas.getBoundingClientRect();
+                const startX = e.clientX; const startY = e.clientY;
+                const startLeftPx = (block.x / 100) * canvasRect.width; const startTopPx = (block.y / 100) * canvasRect.height;
+                function onMove(ev) {
+                    const dx = ev.clientX - startX; const dy = ev.clientY - startY;
+                    let newLeftPx = startLeftPx + dx; let newTopPx = startTopPx + dy;
+                    newLeftPx = Math.max(0, Math.min(newLeftPx, canvasRect.width - 20));
+                    newTopPx = Math.max(0, Math.min(newTopPx, canvasRect.height - 20));
+                    block.x = (newLeftPx / canvasRect.width) * 100; block.y = (newTopPx / canvasRect.height) * 100;
+                    el.style.left = block.x + '%'; el.style.top = block.y + '%';
+                }
+                function onUp() { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
+                document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+            });
+        }
+        function makeBlockResizable(el, block, canvas) {
+            const handle = el.querySelector('.cblock-resize-handle');
+            handle.addEventListener('mousedown', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                const canvasRect = canvas.getBoundingClientRect();
+                const startX = e.clientX; const startY = e.clientY;
+                const startWidthPx = (block.width / 100) * canvasRect.width; const startHeightPx = (block.height / 100) * canvasRect.height;
+                function onMove(ev) {
+                    const dx = ev.clientX - startX; const dy = ev.clientY - startY;
+                    let newWidthPx = Math.max(60, startWidthPx + dx); let newHeightPx = Math.max(40, startHeightPx + dy);
+                    block.width = Math.min(100, (newWidthPx / canvasRect.width) * 100); block.height = (newHeightPx / canvasRect.height) * 100;
+                    el.style.width = block.width + '%'; el.style.height = block.height + '%';
+                }
+                function onUp() { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
+                document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+            });
+        }
+
+        async function publishNewsItem() { const editId = document.getElementById('edit-news-id').value; const publishType = document.getElementById('news-publish-type').value; const mediaType = document.getElementById('news-media-type').value; const title = document.getElementById('news-title-field').value.trim(); const bodyText = document.getElementById('news-body-field').value.trim(); const date = document.getElementById('news-date-field').value; if (publishType === 'news' && !title) { showToast("Введіть заголовок!", "warning"); return; } if (bodyMode === 'simple' && !bodyText) { showToast("Введіть текст!", "warning"); return; } if (bodyMode === 'constructor' && constructorBlocks.length === 0) { showToast("Додайте хоч один блок у конструкторі!", "warning"); return; }
             const tagsArr = document.getElementById('news-tags-field').value.trim() ? document.getElementById('news-tags-field').value.split(',').map(t => t.trim()).filter(t => t) : [];
             const quoteText = document.getElementById('news-quote-text-field').value.trim();
             const quoteObj = quoteText ? { text: quoteText, author: document.getElementById('news-quote-author-field').value.trim(), role: document.getElementById('news-quote-role-field').value.trim() } : null;
-            const dataObj = publishType === 'report' ? { description: bodyText, mediaType, videoUrl: mediaType === 'video' ? document.getElementById('news-video-url').value.trim() : null, image: mediaType === 'image' ? (newsPhotoBase64 || null) : null, images: reportExtraImagesArray, imagePosition: newsImagePosition, links: reportLinksArray.filter(l => l.title && l.url), date } : { title, body: bodyText, mediaType, videoUrl: mediaType === 'video' ? document.getElementById('news-video-url').value.trim() : null, image: mediaType === 'image' ? (newsPhotoBase64 || null) : null, imagePosition: newsImagePosition, tags: tagsArr, quote: quoteObj, date }; const collectionName = publishType === 'report' ? "reports" : "news"; try { if (editId) { await db.collection(collectionName).doc(editId).set(dataObj, { merge: true }); showToast("Збережено!", "success"); logAdminAction("news", `Відредагував ${publishType === 'report' ? 'звіт' : 'новину'}: "${title || dataObj.description?.slice(0,40) || ''}"`); } else { dataObj.timestamp = firebase.firestore.FieldValue.serverTimestamp(); await db.collection(collectionName).add(dataObj); showToast("Опубліковано!", "success"); logAdminAction("news", `Опублікував ${publishType === 'report' ? 'звіт' : 'новину'}: "${title || dataObj.description?.slice(0,40) || ''}"`); } cancelNewsEditing(); } catch (err) { showToast("Помилка: " + err.message, "error"); } }
+            const dataObj = publishType === 'report' ? { description: bodyText, mediaType, videoUrl: mediaType === 'video' ? document.getElementById('news-video-url').value.trim() : null, image: mediaType === 'image' ? (newsPhotoBase64 || null) : null, images: reportExtraImagesArray, imagePosition: newsImagePosition, links: reportLinksArray.filter(l => l.title && l.url), date, bodyMode, blocks: bodyMode === 'constructor' ? constructorBlocks : [] } : { title, body: bodyText, mediaType, videoUrl: mediaType === 'video' ? document.getElementById('news-video-url').value.trim() : null, image: mediaType === 'image' ? (newsPhotoBase64 || null) : null, imagePosition: newsImagePosition, tags: tagsArr, quote: quoteObj, date, bodyMode, blocks: bodyMode === 'constructor' ? constructorBlocks : [] }; const collectionName = publishType === 'report' ? "reports" : "news"; try { if (editId) { await db.collection(collectionName).doc(editId).set(dataObj, { merge: true }); showToast("Збережено!", "success"); logAdminAction("news", `Відредагував ${publishType === 'report' ? 'звіт' : 'новину'}: "${title || dataObj.description?.slice(0,40) || ''}"`); } else { dataObj.timestamp = firebase.firestore.FieldValue.serverTimestamp(); await db.collection(collectionName).add(dataObj); showToast("Опубліковано!", "success"); logAdminAction("news", `Опублікував ${publishType === 'report' ? 'звіт' : 'новину'}: "${title || dataObj.description?.slice(0,40) || ''}"`); } cancelNewsEditing(); } catch (err) { showToast("Помилка: " + err.message, "error"); } }
         function startEditNews(id, isReport) { const dataSet = isReport ? globalReportsData : globalNewsData; const item = dataSet.find(n => n.id === id); if(!item) return; document.getElementById('edit-news-id').value = item.id; const publishTypeSelect = document.getElementById('news-publish-type'); if(publishTypeSelect) { publishTypeSelect.value = isReport ? 'report' : 'news'; publishTypeSelect.disabled = true; togglePublishTypeFields(); } document.getElementById('news-title-field').value = isReport ? "Звіт по донатах" : (item.title || ""); if(document.getElementById('news-title-field')) document.getElementById('news-title-field').parentElement.style.display = isReport ? 'none' : 'block'; document.getElementById('news-body-field').value = isReport ? item.description : item.body; document.getElementById('news-date-field').value = item.date || ""; const mediaTypeSelect = document.getElementById('news-media-type'); if(mediaTypeSelect) { mediaTypeSelect.value = item.mediaType || 'image'; toggleMediaInput(); } const previewImg = document.getElementById('news-preview-element'); if(item.mediaType === 'image' || !item.mediaType) { if(item.image) { newsPhotoBase64 = item.image; newsImagePosition = item.imagePosition || "50% 50%"; if(previewImg) { previewImg.src = item.image; previewImg.style.display = 'block'; } document.getElementById('news-position-hint').style.display = 'block'; attachPositionPicker('news-preview-element', 'news-position-marker', newsImagePosition, (pos) => { newsImagePosition = pos; }); } else { if(previewImg) previewImg.style.display = 'none'; newsPhotoBase64 = ""; } document.getElementById('news-video-url').value = ""; } else if (item.mediaType === 'video') { document.getElementById('news-video-url').value = item.videoUrl || ""; if(previewImg) previewImg.style.display = 'none'; newsPhotoBase64 = ""; }
             document.getElementById('news-tags-field').value = (item.tags || []).join(', ');
             document.getElementById('news-quote-text-field').value = item.quote?.text || '';
@@ -1866,10 +1990,13 @@
             document.getElementById('news-quote-role-field').value = item.quote?.role || '';
             reportExtraImagesArray = item.images ? [...item.images] : []; renderReportExtraPhotosPreview();
             reportLinksArray = item.links ? JSON.parse(JSON.stringify(item.links)) : []; renderReportLinksList();
+            constructorBlocks = item.blocks ? JSON.parse(JSON.stringify(item.blocks)) : []; selectedBlockId = null;
+            setBodyMode(item.bodyMode === 'constructor' ? 'constructor' : 'simple'); renderConstructorCanvas();
             document.getElementById('news-form-title').innerText = isReport ? "📝 Редагування звіту" : "📝 Редагування новини"; document.getElementById('news-submit-btn').innerText = "Зберегти зміни"; document.getElementById('news-cancel-edit-btn').style.display = 'inline-flex'; }
         function cancelNewsEditing() { document.getElementById('edit-news-id').value = ""; const publishTypeSelect = document.getElementById('news-publish-type'); if(publishTypeSelect) { publishTypeSelect.value = 'news'; publishTypeSelect.disabled = false; togglePublishTypeFields(); } if(document.getElementById('news-title-field')) { document.getElementById('news-title-field').value = ""; document.getElementById('news-title-field').parentElement.style.display = 'block'; } document.getElementById('news-body-field').value = ""; const mediaTypeSelect = document.getElementById('news-media-type'); if(mediaTypeSelect) mediaTypeSelect.value = 'image'; toggleMediaInput(); const photoFile = document.getElementById('news-photo-file'); if(photoFile) photoFile.value = ""; const previewImg = document.getElementById('news-preview-element'); if(previewImg) previewImg.style.display = 'none'; document.getElementById('news-position-hint').style.display = 'none'; newsImagePosition = "50% 50%"; document.getElementById('news-video-url').value = ""; newsPhotoBase64 = "";
             document.getElementById('news-tags-field').value = ''; document.getElementById('news-quote-text-field').value = ''; document.getElementById('news-quote-author-field').value = ''; document.getElementById('news-quote-role-field').value = '';
             reportExtraImagesArray = []; renderReportExtraPhotosPreview(); reportLinksArray = []; renderReportLinksList();
+            constructorBlocks = []; selectedBlockId = null; setBodyMode('simple'); renderConstructorCanvas();
             document.getElementById('news-form-title').innerText = "📰 Публікація новини / звіту"; document.getElementById('news-submit-btn').innerText = "Опублікувати"; document.getElementById('news-cancel-edit-btn').style.display = 'none'; document.getElementById('news-date-field').valueAsDate = new Date(); }
         function renderAdminNewsChronicle() { const box = document.getElementById('box-for-published-news'); if(!box) return; box.innerHTML = ""; let combinedData = [...globalNewsData, ...globalReportsData].sort((a, b) => (b.date ? new Date(b.date).getTime() : (b.timestamp?.toMillis() || 0)) - (a.date ? new Date(a.date).getTime() : (a.timestamp?.toMillis() || 0))); if(combinedData.length === 0) { box.innerHTML = `<div class="no-msg" style="margin-top:10px;">Немає публікацій</div>`; return; } combinedData.forEach(item => { let imgHtml = item.mediaType === 'video' && item.videoUrl ? `<div style="font-size:0.8rem; color:#aaa; margin-top:5px;">🎥 Відео: ${item.videoUrl}</div>` : (item.image ? `<img src="${item.image}" style="max-height:80px; border-radius:4px; margin-top:5px; display:block;">` : ''); let typeBadge = item.isReport ? `<span style="background:#00ffcc; color:#000; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold; margin-right:5px;">ЗВІТ</span>` : `<span style="background:var(--theme-color); color:#000; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold; margin-right:5px;">НОВИНА</span>`; box.innerHTML += `<div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding: 15px;"><div style="font-size:0.8rem; color:var(--theme-color); font-weight:bold; margin-bottom:5px;">${typeBadge} 📅 ${item.date || new Date(item.timestamp?.toMillis() || Date.now()).toLocaleDateString('uk-UA')}</div><div style="font-weight:bold; margin:4px 0; font-size:1rem;">${item.isReport ? "Финансовий звіт" : item.title}</div><div style="font-size:0.85rem; color:#ccc; max-height:45px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.isReport ? item.description : item.body}</div>${imgHtml}<div style="display:flex; gap:10px; margin-top:15px;"><button class="btn btn-outline" style="padding:6px 12px; font-size:0.8rem;" onclick="startEditNews('${item.id}', ${item.isReport})">Редагувати</button><button class="btn btn-outline" style="border-color:#ff4a4a; color:#ff4a4a; padding:6px 12px; font-size:0.8rem;" onclick="deleteNewsItem('${item.id}', ${item.isReport})">Видалити</button></div></div>`; }); }
         async function deleteNewsItem(id, isReport) { let collectionName = isReport ? "reports" : "news"; const item = (isReport ? globalReportsData : globalNewsData).find(n => n.id === id); if(confirm(`Перемістити в кошик?`)) { try { await softDelete(collectionName, id, item ? (item.title || item.description?.slice(0,40)) : id); if(document.getElementById('edit-news-id').value === id) cancelNewsEditing(); showToast("Переміщено в кошик.", "success"); logAdminAction("news", `Видалив ${isReport ? 'звіт' : 'новину'} (id: ${id})`); } catch(e) { showToast(e.message, "error"); } } }
