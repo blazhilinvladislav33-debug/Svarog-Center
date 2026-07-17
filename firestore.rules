@@ -37,6 +37,9 @@ service cloud.firestore {
     match /volunteers/{docId} { allow create: if true; }
     match /feedback/{docId} { allow create: if true; }
     match /hub_clicks/{docId} { allow create: if true; allow read: if isAdmin(); } // Запис кліків для аналітики
+    match /recruiting_applications/{docId} { allow create: if true; } // Заявки на рекрутинг з сайту
+    match /newsletter_subscribers/{docId} { allow create: if true; } // Підписка на розсилку
+    match /sizeCharts/{docId} { allow read: if true; } // Розмірні сітки — показуються в магазині
 
     // Заявки на доступ — будь-хто може СТВОРИТИ заявку (реєстрація),
     // але читати/видаляти список заявок може тільки адмін.
