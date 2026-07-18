@@ -721,6 +721,24 @@
             .cblock-body textarea, .cblock-body input { width: 100%; height: 100%; background: transparent; border: none; color: #fff; resize: none; font-size: 0.85rem; font-family: inherit; }
             .cblock-body img { width: 100%; height: 100%; object-fit: cover; }
             .cblock-resize-handle { position: absolute; bottom: 0; right: 0; width: 14px; height: 14px; cursor: nwse-resize; background: linear-gradient(135deg, transparent 50%, #00bfff 50%); }
+
+            /* ==================== ПОПЕРЕДНІЙ ПЕРЕГЛЯД (як на сайті) ==================== */
+            .preview-overlay { display: none; position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; padding: 30px; }
+            .preview-overlay.open { display: flex; }
+            .preview-frame { width: 100%; max-width: 1000px; height: 88vh; background: #0E0E0F; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 30px 80px rgba(0,0,0,0.6); }
+            .preview-frame-bar { background: #16171A; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #26282D; flex-shrink: 0; }
+            .preview-frame-bar .dots { display: flex; gap: 6px; }
+            .preview-frame-bar .dots span { width: 11px; height: 11px; border-radius: 50%; background: #444; }
+            .preview-frame-bar button { background: none; border: 1px solid #444; color: #aaa; border-radius: 6px; padding: 5px 14px; cursor: pointer; font-size: 0.8rem; }
+            .preview-frame-body { flex: 1; overflow-y: auto; padding: 50px 60px; }
+            .preview-canvas { position: relative; width: 100%; min-height: 400px; font-family: 'Manrope', sans-serif; }
+            .pabl { position: absolute; box-sizing: border-box; }
+            .pabl-text { color: #C4C7CC; font-size: 16px; line-height: 1.7; white-space: pre-wrap; overflow: auto; }
+            .pabl-photo { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+            .pabl-quote { background: rgba(255,255,255,0.03); border: 1px solid #26282D; border-left: 4px solid #E8A88A; border-radius: 8px; padding: 20px; overflow: auto; }
+            .pabl-quote-text { color: #F2EFE9; font-size: 16px; font-style: italic; line-height: 1.5; margin-bottom: 10px; }
+            .pabl-quote-author { color: #E8A88A; font-weight: 700; font-size: 14px; }
+            .pabl-video { width: 100%; height: 100%; border-radius: 6px; overflow: hidden; background: #000; display:flex; align-items:center; justify-content:center; color:#666; font-size:0.8rem; }
     </style>
 </head>
 <body>
@@ -743,6 +761,19 @@
                 <div class="form-group"><input type="email" id="req-access-email" class="form-input" placeholder="Ваша електронна пошта"></div>
                 <div class="form-group" style="margin-bottom:0;"><input type="text" id="req-access-name" class="form-input" placeholder="Ваше ПІБ / Позивний"></div>
                 <button class="btn" style="width:100%; margin-top:10px;" onclick="submitAdminAccessRequest()">Відправити запит</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="preview-overlay" id="constructorPreviewOverlay">
+        <div class="preview-frame">
+            <div class="preview-frame-bar">
+                <div class="dots"><span></span><span></span><span></span></div>
+                <span style="color:#888; font-size:0.8rem;">svarogteam.com — попередній перегляд</span>
+                <button onclick="closeConstructorPreview()">Закрити ✕</button>
+            </div>
+            <div class="preview-frame-body">
+                <div class="preview-canvas" id="constructorPreviewCanvas"></div>
             </div>
         </div>
     </div>
@@ -1048,6 +1079,7 @@
                                         <button type="button" onclick="addConstructorBlock('photo')">+ Фото</button>
                                         <button type="button" onclick="addConstructorBlock('quote')">+ Цитата</button>
                                         <button type="button" onclick="addConstructorBlock('video')">+ Відео</button>
+                                        <button type="button" style="margin-left:auto; border-color:#00bfff; color:#00bfff;" onclick="openConstructorPreview()">👁 Перегляд сторінки</button>
                                     </div>
                                     <div class="constructor-canvas" id="constructor-canvas"></div>
                                 </div>
@@ -1055,7 +1087,7 @@
 
                                 <div id="news-tags-quote-zone">
                                     <div class="form-group"><label class="form-label">Теги (через кому):</label><input type="text" id="news-tags-field" class="form-input" placeholder="35 полк, піхота, безпілотники"></div>
-                                    <div class="admin-card" style="background:rgba(0,0,0,0.2); margin:15px 0;">
+                                    <div class="admin-card" id="news-fixed-quote-card" style="background:rgba(0,0,0,0.2); margin:15px 0;">
                                         <h4 style="font-size:0.9rem; color:#ffaa00; margin-bottom:10px;">💬 Цитата (необов'язково)</h4>
                                         <div class="form-group" style="margin-bottom:10px;"><textarea id="news-quote-text-field" class="form-input" placeholder="Текст цитати" style="min-height:60px;"></textarea></div>
                                         <div class="grid-2"><input type="text" id="news-quote-author-field" class="form-input" placeholder="Автор (напр. Друг «Тір»)"><input type="text" id="news-quote-role-field" class="form-input" placeholder="Посада"></div>
@@ -1926,6 +1958,26 @@
             document.getElementById('merch-sizechart-custom-zone').style.display = 'none'; document.getElementById('merch-sizechart-select').disabled = false;
         }
 
+        function openConstructorPreview() {
+            if (constructorBlocks.length === 0) { showToast("Спочатку додайте хоч один блок", "warning"); return; }
+            const canvas = document.getElementById('constructorPreviewCanvas');
+            canvas.innerHTML = '';
+            constructorBlocks.forEach(block => {
+                const el = document.createElement('div');
+                el.className = 'pabl';
+                el.style.left = block.x + '%'; el.style.top = block.y + '%'; el.style.width = block.width + '%'; el.style.height = block.height + '%';
+                if (block.type === 'text') el.innerHTML = `<div class="pabl-text">${(block.content || '').replace(/\n/g, '<br>')}</div>`;
+                else if (block.type === 'photo') el.innerHTML = block.src ? `<img class="pabl-photo" src="${block.src}">` : `<div class="pabl-video">Фото не завантажено</div>`;
+                else if (block.type === 'quote') el.innerHTML = `<div class="pabl-quote"><div class="pabl-quote-text">${block.text || '(текст цитати)'}</div><div class="pabl-quote-author">${block.author || ''}</div></div>`;
+                else if (block.type === 'video') el.innerHTML = block.videoUrl ? `<div class="pabl-video">🎬 Відео відтвориться тут</div>` : `<div class="pabl-video">Посилання не вказано</div>`;
+                canvas.appendChild(el);
+            });
+            const deepestPct = Math.max(...constructorBlocks.map(b => b.y + b.height), 40);
+            canvas.style.minHeight = Math.max(400, deepestPct * 6) + 'px';
+            document.getElementById('constructorPreviewOverlay').classList.add('open');
+        }
+        function closeConstructorPreview() { document.getElementById('constructorPreviewOverlay').classList.remove('open'); }
+
         function togglePublishTypeFields() {
             const isReport = document.getElementById('news-publish-type').value === 'report';
             document.getElementById('news-tags-quote-zone').style.display = isReport ? 'none' : 'block';
@@ -1961,6 +2013,7 @@
             document.getElementById('mode-btn-constructor').classList.toggle('active', mode === 'constructor');
             document.getElementById('news-body-simple-zone').style.display = mode === 'simple' ? 'block' : 'none';
             document.getElementById('news-body-constructor-zone').style.display = mode === 'constructor' ? 'block' : 'none';
+            const fixedQuoteCard = document.getElementById('news-fixed-quote-card'); if (fixedQuoteCard) fixedQuoteCard.style.display = mode === 'constructor' ? 'none' : 'block';
         }
 
         function addConstructorBlock(type) {
@@ -1968,7 +2021,7 @@
             let block = { id, type, x: 10, y: 10, width: 40, height: 20 };
             if (type === 'text') { block.content = ''; block.height = 15; }
             if (type === 'photo') { block.src = ''; block.height = 30; }
-            if (type === 'quote') { block.text = ''; block.author = ''; block.role = ''; block.height = 22; }
+            if (type === 'quote') { block.text = ''; block.author = ''; block.height = 20; }
             if (type === 'video') { block.videoUrl = ''; block.height = 25; }
             constructorBlocks.push(block);
             renderConstructorCanvas();
@@ -1988,7 +2041,7 @@
                 let typeLabel = { text: '📝 Текст', photo: '🖼 Фото', quote: '💬 Цитата', video: '🎬 Відео' }[block.type];
                 if (block.type === 'text') bodyHtml = `<textarea placeholder="Введіть текст...">${block.content || ''}</textarea>`;
                 else if (block.type === 'photo') bodyHtml = block.src ? `<img src="${block.src}">` : `<input type="file" accept="image/*" style="height:auto;">`;
-                else if (block.type === 'quote') bodyHtml = `<div style="display:flex; flex-direction:column; gap:4px; height:100%;"><textarea placeholder="Текст цитати" style="flex:1;">${block.text || ''}</textarea><input type="text" placeholder="Автор" value="${block.author || ''}" data-field="author"><input type="text" placeholder="Посада" value="${block.role || ''}" data-field="role"></div>`;
+                else if (block.type === 'quote') bodyHtml = `<div style="display:flex; flex-direction:column; gap:4px; height:100%;"><textarea placeholder="Текст цитати" style="flex:1;">${block.text || ''}</textarea><input type="text" placeholder="Автор" value="${block.author || ''}" data-field="author"></div>`;
                 else if (block.type === 'video') bodyHtml = `<input type="text" placeholder="Посилання YouTube" value="${block.videoUrl || ''}">`;
 
                 el.innerHTML = `<div class="cblock-bar"><span>${typeLabel}</span><button type="button" onclick="deleteConstructorBlock('${block.id}')">✕</button></div><div class="cblock-body">${bodyHtml}</div><div class="cblock-resize-handle"></div>`;
@@ -2045,7 +2098,7 @@
 
         async function publishNewsItem() { const editId = document.getElementById('edit-news-id').value; const publishType = document.getElementById('news-publish-type').value; const mediaType = document.getElementById('news-media-type').value; const title = document.getElementById('news-title-field').value.trim(); const bodyText = document.getElementById('news-body-field').value.trim(); const date = document.getElementById('news-date-field').value; if (publishType === 'news' && !title) { showToast("Введіть заголовок!", "warning"); return; } if (bodyMode === 'simple' && !bodyText) { showToast("Введіть текст!", "warning"); return; } if (bodyMode === 'constructor' && constructorBlocks.length === 0) { showToast("Додайте хоч один блок у конструкторі!", "warning"); return; }
             const tagsArr = document.getElementById('news-tags-field').value.trim() ? document.getElementById('news-tags-field').value.split(',').map(t => t.trim()).filter(t => t) : [];
-            const quoteText = document.getElementById('news-quote-text-field').value.trim();
+            const quoteText = bodyMode === 'simple' ? document.getElementById('news-quote-text-field').value.trim() : '';
             const quoteObj = quoteText ? { text: quoteText, author: document.getElementById('news-quote-author-field').value.trim(), role: document.getElementById('news-quote-role-field').value.trim() } : null;
             const dataObj = publishType === 'report' ? { description: bodyText, mediaType, videoUrl: mediaType === 'video' ? document.getElementById('news-video-url').value.trim() : null, image: mediaType === 'image' ? (newsPhotoBase64 || null) : null, images: reportExtraImagesArray, imagePosition: newsImagePosition, links: reportLinksArray.filter(l => l.title && l.url), date, bodyMode, blocks: bodyMode === 'constructor' ? constructorBlocks : [] } : { title, body: bodyText, mediaType, videoUrl: mediaType === 'video' ? document.getElementById('news-video-url').value.trim() : null, image: mediaType === 'image' ? (newsPhotoBase64 || null) : null, imagePosition: newsImagePosition, tags: tagsArr, quote: quoteObj, date, bodyMode, blocks: bodyMode === 'constructor' ? constructorBlocks : [] }; const collectionName = publishType === 'report' ? "reports" : "news"; try { if (editId) { await db.collection(collectionName).doc(editId).set(dataObj, { merge: true }); showToast("Збережено!", "success"); logAdminAction("news", `Відредагував ${publishType === 'report' ? 'звіт' : 'новину'}: "${title || dataObj.description?.slice(0,40) || ''}"`); } else { dataObj.timestamp = firebase.firestore.FieldValue.serverTimestamp(); await db.collection(collectionName).add(dataObj); showToast("Опубліковано!", "success"); logAdminAction("news", `Опублікував ${publishType === 'report' ? 'звіт' : 'новину'}: "${title || dataObj.description?.slice(0,40) || ''}"`); } cancelNewsEditing(); } catch (err) { showToast("Помилка: " + err.message, "error"); } }
         function startEditNews(id, isReport) { const dataSet = isReport ? globalReportsData : globalNewsData; const item = dataSet.find(n => n.id === id); if(!item) return; document.getElementById('edit-news-id').value = item.id; const publishTypeSelect = document.getElementById('news-publish-type'); if(publishTypeSelect) { publishTypeSelect.value = isReport ? 'report' : 'news'; publishTypeSelect.disabled = true; togglePublishTypeFields(); } document.getElementById('news-title-field').value = isReport ? "Звіт по донатах" : (item.title || ""); if(document.getElementById('news-title-field')) document.getElementById('news-title-field').parentElement.style.display = isReport ? 'none' : 'block'; document.getElementById('news-body-field').value = isReport ? item.description : item.body; document.getElementById('news-date-field').value = item.date || ""; const mediaTypeSelect = document.getElementById('news-media-type'); if(mediaTypeSelect) { mediaTypeSelect.value = item.mediaType || 'image'; toggleMediaInput(); } const previewImg = document.getElementById('news-preview-element'); if(item.mediaType === 'image' || !item.mediaType) { if(item.image) { newsPhotoBase64 = item.image; newsImagePosition = item.imagePosition || "50% 50%"; if(previewImg) { previewImg.src = item.image; previewImg.style.display = 'block'; } document.getElementById('news-position-hint').style.display = 'block'; attachPositionPicker('news-preview-element', 'news-position-marker', newsImagePosition, (pos) => { newsImagePosition = pos; }); } else { if(previewImg) previewImg.style.display = 'none'; newsPhotoBase64 = ""; } document.getElementById('news-video-url').value = ""; } else if (item.mediaType === 'video') { document.getElementById('news-video-url').value = item.videoUrl || ""; if(previewImg) previewImg.style.display = 'none'; newsPhotoBase64 = ""; }
