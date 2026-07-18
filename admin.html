@@ -713,6 +713,11 @@
             .constructor-toolbar button { padding: 6px 14px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.03); color: #fff; cursor: pointer; }
             .constructor-toolbar button:hover { border-color: var(--theme-color); color: var(--theme-color); }
             .constructor-canvas-wrap { max-height: 75vh; overflow-y: auto; overflow-x: hidden; border-radius: 8px; }
+
+            /* ==================== ПОВНОЕКРАННИЙ РЕЖИМ ПУБЛІКАЦІЇ ==================== */
+            #news-publish-card.fullscreen-mode { position: fixed; inset: 0; z-index: 4000; background: var(--bg-main); overflow-y: auto; padding: 30px 5vw; margin: 0; border-radius: 0; }
+            body.fs-lock { overflow: hidden; }
+            #news-publish-card.fullscreen-mode .constructor-canvas-wrap { max-height: 78vh; }
             .constructor-canvas { position: relative; width: 900px; max-width: 100%; margin: 0 auto; min-height: 700px; background: repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 40px), repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 40px); background-color: #0a0a0c; border: 1px dashed rgba(255,255,255,0.15); }
             .cblock { position: absolute; box-sizing: border-box; border: 1px solid rgba(0,191,255,0.4); background: rgba(20,20,25,0.92); border-radius: 4px; cursor: move; overflow: hidden; display: flex; flex-direction: column; }
             .cblock.selected { border-color: #00bfff; box-shadow: 0 0 0 2px rgba(0,191,255,0.3); }
@@ -1057,8 +1062,13 @@
                 <div id="link-management-tab" class="tab-content">
                     <div class="content-grid">
                         <div style="display:flex; flex-direction:column; gap:20px;">
-                            <div class="admin-card">
-                                <h3 class="card-title" id="news-form-title">📰 Публікація новини / звіту</h3><input type="hidden" id="edit-news-id" value="">
+                            <div class="admin-card" id="news-publish-card">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <h3 class="card-title" id="news-form-title" style="border-bottom:none; margin-bottom:0;">📰 Публікація новини / звіту</h3>
+                                    <button type="button" id="fullscreen-toggle-btn" onclick="toggleFullscreenPublish()" style="background:none; border:1px solid var(--border-color); color:#aaa; border-radius:8px; padding:6px 14px; cursor:pointer; font-size:0.8rem;">🖥 На весь екран</button>
+                                </div>
+                                <div style="border-bottom:1px solid var(--border-color); margin-bottom:20px;"></div>
+                                <input type="hidden" id="edit-news-id" value="">
                                 <div class="grid-2"><div class="form-group" style="margin:0;"><label class="form-label">Тип:</label><select id="news-publish-type" class="form-select" onchange="togglePublishTypeFields()"><option value="news">Новина</option><option value="report">Звіт (Донати)</option></select></div><div class="form-group" style="margin:0;"><label class="form-label">Медіа:</label><select id="news-media-type" class="form-select" onchange="toggleMediaInput()"><option value="image">Фото</option><option value="video">YouTube Відео</option></select></div></div>
                                 <div class="form-group" id="news-photo-zone" style="margin-top: 15px;"><input type="file" id="news-photo-file" accept="image/*" class="form-input" onchange="previewNewsPhoto(this)" style="padding: 8px;">
                                     <div style="position:relative; margin-top:10px;">
@@ -1129,6 +1139,13 @@
                                 <h3 class="card-title" style="color:#ffaa00; border-bottom-color: rgba(255, 170, 0, 0.3);">🖼️ Фон інших сторінок</h3>
                                 <p style="font-size:0.8rem; color:#aaa; margin-bottom:12px;">По одному фото на сторінку (не декілька, як на головній). З'являється замість заглушки одразу під заголовком.</p>
                                 <div id="page-backgrounds-list" style="display:flex; flex-direction:column; gap:14px;"></div>
+                            </div>
+                            <div class="admin-card" style="border-color: #7fdbff;">
+                                <h3 class="card-title" style="color:#7fdbff; border-bottom-color: rgba(127, 219, 255, 0.3);">📞 Контакт-центр (головна сторінка)</h3>
+                                <p style="font-size:0.8rem; color:#aaa; margin-bottom:12px;">Ці дані показуються у блоці "Долучайся" на головній сторінці сайту.</p>
+                                <div class="form-group"><label class="form-label">Номер телефону:</label><input type="text" id="contact-phone-input" class="form-input" placeholder="+380 XX XXX XX XX"></div>
+                                <div class="form-group"><label class="form-label">Посилання на Telegram-бота:</label><input type="text" id="contact-telegram-input" class="form-input" placeholder="https://t.me/svarogteam_bot"></div>
+                                <button class="btn btn-outline" style="width:100%; border-color:#7fdbff; color:#7fdbff;" onclick="saveContactInfo()">Зберегти контакти</button>
                             </div>
                             <div class="admin-card" style="border-color: #00bfff;">
                                 <h3 class="card-title" style="color:#00bfff; border-bottom-color: rgba(0, 191, 255, 0.3);">🖼️ Банер магазину</h3>
@@ -1398,7 +1415,7 @@
             </style></head><body>
                 <div class="toolbar"><button onclick="window.print()">🖨️ Друкувати</button><span>Клікніть на будь-який текст, щоб виправити його перед друком</span></div>
                 <div class="header"><div><div class="title">SVAROG TEAM</div><div>Волонтерський магазин</div></div><div style="text-align: right;"><div><b>Накладна №:</b> ${order.id.substring(0,10).toUpperCase()}</div><div><b>Дата:</b> ${order.time || new Date().toLocaleDateString('uk-UA')}</div></div></div>
-                <div style="margin-bottom: 30px;"><h3>Одержувач:</h3><div contenteditable="true"><b>ПІБ:</b> ${order.name}</div><div contenteditable="true"><b>Телефон:</b> ${order.phone}</div><div contenteditable="true"><b>Адреса доставки:</b> ${order.address}</div><div contenteditable="true"><b>Оплата:</b> ${order.paymentMethod || 'Не вказано'}</div></div>
+                <div style="margin-bottom: 30px;"><h3>Одержувач:</h3><div contenteditable="true"><b>ПІБ:</b> ${order.name}</div><div contenteditable="true"><b>Телефон:</b> ${order.phone}</div><div contenteditable="true"><b>Адреса доставки:</b> ${order.address}</div><div contenteditable="true"><b>Оплата:</b> ${({bank:'На Банку',card:'На Картку',cod:'Накладений платіж'})[order.paymentMethod] || order.paymentMethod || 'Не вказано'}</div></div>
                 <table><thead><tr><th>Товар</th><th style="text-align: center;">К-сть</th><th style="text-align: right;">Сума</th></tr></thead><tbody>${itemsHtml}</tbody></table>
                 <div class="total" contenteditable="true">ДО СПЛАТИ: ${order.totalPrice} ₴</div><div style="margin-top: 50px; text-align: center; font-size: 14px; color: #555;">Дякуємо за підтримку! Разом до перемоги. 🇺🇦</div></body></html>`);
             printWindow.document.close(); printWindow.focus();
@@ -1657,7 +1674,7 @@
                 let status = ord.status || 'new'; let sClass = status === 'new' || status === 'on_review' ? 'on_review' : status === 'accepted' ? 'accepted' : status === 'sent' ? 'sent' : status === 'delivered' ? 'delivered' : status === 'cancelled' ? 'cancelled' : 'archived';
                 let itemsListHtml = '';
                 if(ord.items && Array.isArray(ord.items)) { ord.items.forEach(it => { itemsListHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.9rem; padding-left:10px; border-left:2px solid var(--theme-color);"><span><b>${it.merchTitle.replace('[ПЕРЕДЗАМОВЛЕННЯ]', '<span style="color:#777;">[PRE]</span>')}</b>${it.color ? ` (${it.color})` : ''}${it.size === 'Універсальний' ? '' : ` [${it.size}]`} x${it.quantity} шт</span><span style="color:var(--theme-color); font-weight:bold;">${it.totalPrice} ₴</span></div>`; }); } else if(ord.orderTextDetails) { itemsListHtml = `<pre style="font-family:inherit; font-size:0.9rem; margin-left:10px; color:#ccc;">${ord.orderTextDetails}</pre>`; }
-                let paymentMethodHtml = ord.paymentMethod ? `<div style="font-size:0.9rem; color:#fff; margin-bottom:8px;">💳 <b>Оплата:</b> ${ord.paymentMethod}</div>` : ''; let paymentProofHtml = ord.paymentProof ? `<button class="btn btn-outline" style="margin-top:10px; padding:6px 12px; font-size:0.85rem;" onclick="window.open().document.write('<img src=\\'${ord.paymentProof}\\'>')">📸 Переглянути квитанцію</button>` : '';
+                let paymentMethodLabels = { bank: 'На Банку', card: 'На Картку', cod: 'Накладений платіж' }; let paymentMethodHtml = ord.paymentMethod ? `<div style="font-size:0.9rem; color:#fff; margin-bottom:8px;">💳 <b>Оплата:</b> ${paymentMethodLabels[ord.paymentMethod] || ord.paymentMethod}</div>` : ''; let paymentProofHtml = ord.paymentProof ? `<button class="btn btn-outline" style="margin-top:10px; padding:6px 12px; font-size:0.85rem;" onclick="window.open().document.write('<img src=\\'${ord.paymentProof}\\'>')">📸 Переглянути квитанцію</button>` : '';
                 let npBlock = ''; if(ord.ttn) { npBlock = `<div class="ttn-badge" style="background:rgba(121,133,84,0.1); border-color:var(--theme-color); color:var(--theme-color); cursor:pointer;" onclick="navigator.clipboard.writeText('${ord.ttn}'); showToast('ТТН скопійовано!')">🚚 ТТН: ${ord.ttn}</div>`; } else if(status === 'accepted' || status === 'on_review' || status === 'new') { npBlock = `<button class="btn" style="background:var(--np-red); color:#fff; margin-top:10px; padding:6px 12px; font-size:0.85rem; border:none;" onclick="openNPModal('${ord.id}')">📦 Оформити ТТН</button>`; }
                 ordersBox.innerHTML += `
                     <div class='admin-card' style="border-left: 4px solid var(--theme-color); padding: 20px;">
@@ -1938,6 +1955,14 @@
             if (!confirm("Прибрати фото фону для цієї сторінки?")) return;
             try { await db.collection("config").doc("pageBackgrounds").update({ [key]: firebase.firestore.FieldValue.delete() }); showToast("Прибрано.", "success"); } catch(e) { showToast(e.message, "error"); }
         }
+
+        // ==================== КОНТАКТ-ЦЕНТР (телефон + Telegram-бот) ====================
+        async function saveContactInfo() {
+            const phone = document.getElementById('contact-phone-input').value.trim();
+            const telegramBot = document.getElementById('contact-telegram-input').value.trim();
+            try { await db.collection("config").doc("contact").set({ phone, telegramBot }, { merge: true }); showToast("Контакти збережено!", "success"); logAdminAction("settings", "Оновив контакт-центр (телефон/бот)"); }
+            catch(e) { showToast(e.message, "error"); }
+        }
         async function saveShopHeroImage() { if(!shopHeroBase64) { showToast("Оберіть файл!", "warning"); return; } try { await db.collection("config").doc("shop").set({ heroImage: shopHeroBase64 }, { merge: true }); showToast("Банер оновлено!", "success"); } catch(e) { showToast(e.message, "error"); } }
         async function savePaymentCredentials() { const bankUrl = document.getElementById('new-donation-link-field').value.trim(); const cardNumber = document.getElementById('config-card-number').value.trim(); const cardName = document.getElementById('config-card-name').value.trim(); try { await db.collection("config").doc("payment").set({ bankUrl, cardNumber, cardName }, { merge: true }); showToast("Збережено!", "success"); logAdminAction("payment", "Оновив платіжні реквізити"); } catch(e) { showToast(e.message, "error"); } }
         async function addNewSocialNetwork() { const editId = document.getElementById('edit-soc-id').value; const name = document.getElementById('soc-name').value.trim(); const url = document.getElementById('soc-url').value.trim(); const color = document.getElementById('soc-color').value; if(!name || !url) { showToast("Заповніть!", "warning"); return; } let updatedList = [...globalSocialNetworks]; if(editId) { let i = updatedList.findIndex(n => n.id === editId); if(i > -1) updatedList[i] = { id: editId, name, url, color }; } else { updatedList.push({ id: 'soc_' + Date.now(), name, url, color }); } try { await db.collection("config").doc("socials").set({ list: updatedList }); cancelSocEditing(); showToast("Збережено!", "success"); logAdminAction("payment", `${editId ? 'Відредагував' : 'Додав'} соцмережу: ${name}`); } catch(e) { showToast(e.message, "error"); } }
@@ -2050,7 +2075,25 @@
 
                 // Збереження контенту при введенні
                 if (block.type === 'text') { el.querySelector('textarea').addEventListener('input', e => { block.content = e.target.value; }); }
-                else if (block.type === 'photo') { const fileInp = el.querySelector('input[type=file]'); if (fileInp) fileInp.addEventListener('change', async e => { if (e.target.files[0]) { block.src = await getCompressedBase64(e.target.files[0]); renderConstructorCanvas(); } }); }
+                else if (block.type === 'photo') { const fileInp = el.querySelector('input[type=file]'); if (fileInp) fileInp.addEventListener('change', async e => {
+                    if (e.target.files[0]) {
+                        block.src = await getCompressedBase64(e.target.files[0]);
+                        const probe = new Image();
+                        probe.onload = () => {
+                            const canvasEl = document.getElementById('constructor-canvas'); const canvasRect = canvasEl.getBoundingClientRect();
+                            const isVertical = probe.naturalHeight > probe.naturalWidth;
+                            let widthPct = isVertical ? 28 : 55;
+                            const widthPx = (widthPct / 100) * canvasRect.width;
+                            const heightPx = widthPx * (probe.naturalHeight / probe.naturalWidth);
+                            let heightPct = (heightPx / canvasRect.height) * 100;
+                            const gridPctX = (40 / canvasRect.width) * 100; const gridPctY = (40 / canvasRect.height) * 100;
+                            widthPct = Math.round(widthPct / gridPctX) * gridPctX; heightPct = Math.max(gridPctY, Math.round(heightPct / gridPctY) * gridPctY);
+                            block.width = Math.min(100 - block.x, widthPct); block.height = heightPct;
+                            renderConstructorCanvas();
+                        };
+                        probe.src = block.src;
+                    }
+                }); }
                 else if (block.type === 'quote') { el.querySelector('textarea').addEventListener('input', e => { block.text = e.target.value; }); el.querySelectorAll('input').forEach(inp => inp.addEventListener('input', e => { block[e.target.dataset.field] = e.target.value; })); }
                 else if (block.type === 'video') { el.querySelector('input').addEventListener('input', e => { block.videoUrl = e.target.value; }); }
 
@@ -2063,6 +2106,14 @@
         function updateCanvasHeight(canvas) {
             const deepestPct = constructorBlocks.length > 0 ? Math.max(...constructorBlocks.map(b => b.y + b.height), 78) : 78;
             canvas.style.minHeight = Math.max(700, deepestPct * 9) + 'px';
+        }
+
+        function toggleFullscreenPublish() {
+            const card = document.getElementById('news-publish-card');
+            const btn = document.getElementById('fullscreen-toggle-btn');
+            const isFs = card.classList.toggle('fullscreen-mode');
+            document.body.classList.toggle('fs-lock', isFs);
+            btn.innerText = isFs ? '✕ Закрити' : '🖥 На весь екран';
         }
 
         function rectsOverlap(a, b) {
@@ -2086,7 +2137,10 @@
                     let newLeftPx = startLeftPx + dx; let newTopPx = startTopPx + dy;
                     newLeftPx = Math.max(0, Math.min(newLeftPx, canvasRect.width - 20));
                     newTopPx = Math.max(0, Math.min(newTopPx, canvasRect.height - 20));
-                    const candX = (newLeftPx / canvasRect.width) * 100; const candY = (newTopPx / canvasRect.height) * 100;
+                    const gridPxSize = 40;
+                    const gridPctX = (gridPxSize / canvasRect.width) * 100; const gridPctY = (gridPxSize / canvasRect.height) * 100;
+                    let candX = (newLeftPx / canvasRect.width) * 100; let candY = (newTopPx / canvasRect.height) * 100;
+                    candX = Math.round(candX / gridPctX) * gridPctX; candY = Math.round(candY / gridPctY) * gridPctY;
                     const candidate = { x: candX, y: candY, width: block.width, height: block.height };
                     if (!hasCollision(candidate, block.id)) { lastValidX = candX; lastValidY = candY; }
                     block.x = lastValidX; block.y = lastValidY;
@@ -2108,7 +2162,10 @@
                 function onMove(ev) {
                     const dx = ev.clientX - startX; const dy = ev.clientY - startY;
                     let newWidthPx = Math.max(60, startWidthPx + dx); let newHeightPx = Math.max(40, startHeightPx + dy);
-                    const candW = Math.min(100 - block.x, (newWidthPx / canvasRect.width) * 100); const candH = (newHeightPx / canvasRect.height) * 100;
+                    const gridPxSize = 40;
+                    const gridPctX = (gridPxSize / canvasRect.width) * 100; const gridPctY = (gridPxSize / canvasRect.height) * 100;
+                    let candW = Math.min(100 - block.x, (newWidthPx / canvasRect.width) * 100); let candH = (newHeightPx / canvasRect.height) * 100;
+                    candW = Math.max(gridPctX, Math.round(candW / gridPctX) * gridPctX); candH = Math.max(gridPctY, Math.round(candH / gridPctY) * gridPctY);
                     const candidate = { x: block.x, y: block.y, width: candW, height: candH };
                     if (!hasCollision(candidate, block.id)) { lastValidW = candW; lastValidH = candH; }
                     block.width = lastValidW; block.height = lastValidH;
@@ -2377,11 +2434,11 @@
                     });
                     globalChatsData = {}; snapshot.forEach(doc => { globalChatsData[doc.id] = doc.data(); }); renderAllDynamicData(); renderArchiveTab();
                 });
-                unsubscribeFeedback = db.collection("feedback").onSnapshot(snapshot => { globalFeedbackData = []; globalArchivedFeedback = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.archived) globalArchivedFeedback.push(d); else globalFeedbackData.push(d); }); renderAllDynamicData(); renderArchiveTab(); });
-                unsubscribeRecruiting = db.collection("recruiting_applications").orderBy("timestamp", "desc").onSnapshot(snapshot => { globalRecruitingData = []; snapshot.forEach(doc => { globalRecruitingData.push({ id: doc.id, ...doc.data() }); }); renderAllDynamicData(); });
-                unsubscribeNewsletter = db.collection("newsletter_subscribers").orderBy("timestamp", "desc").onSnapshot(snapshot => { globalNewsletterData = []; snapshot.forEach(doc => { globalNewsletterData.push({ id: doc.id, ...doc.data() }); }); renderAllDynamicData(); });
+                unsubscribeFeedback = db.collection("feedback").onSnapshot(snapshot => { snapshot.docChanges().forEach(change => { if (change.type === "added" && !isFirstLoad && !change.doc.data().archived) { sendSystemNotification("Нове повідомлення з сайту!", change.doc.data().name || 'Хтось написав через форму зв\'язку'); } }); globalFeedbackData = []; globalArchivedFeedback = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.archived) globalArchivedFeedback.push(d); else globalFeedbackData.push(d); }); renderAllDynamicData(); renderArchiveTab(); });
+                unsubscribeRecruiting = db.collection("recruiting_applications").orderBy("timestamp", "desc").onSnapshot(snapshot => { snapshot.docChanges().forEach(change => { if (change.type === "added" && !isFirstLoad) { sendSystemNotification("Нова заявка на рекрутинг!", `${change.doc.data().name || 'Хтось'} подав(ла) заявку на долучення`); } }); globalRecruitingData = []; snapshot.forEach(doc => { globalRecruitingData.push({ id: doc.id, ...doc.data() }); }); renderAllDynamicData(); });
+                unsubscribeNewsletter = db.collection("newsletter_subscribers").orderBy("timestamp", "desc").onSnapshot(snapshot => { snapshot.docChanges().forEach(change => { if (change.type === "added" && !isFirstLoad) { sendSystemNotification("Новий підписник розсилки!", change.doc.data().email || ''); } }); globalNewsletterData = []; snapshot.forEach(doc => { globalNewsletterData.push({ id: doc.id, ...doc.data() }); }); renderAllDynamicData(); });
                 unsubscribeSizeCharts = db.collection("sizeCharts").onSnapshot(snapshot => { globalSizeCharts = []; snapshot.forEach(doc => { globalSizeCharts.push({ id: doc.id, ...doc.data() }); }); renderSizeChartsAdmin(); populateSizeChartSelect(); });
-                unsubscribeVolunteers = db.collection("volunteers").onSnapshot(snapshot => { globalVolunteersData = []; globalArchivedVolunteers = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.archived) globalArchivedVolunteers.push(d); else globalVolunteersData.push(d); }); renderAllDynamicData(); renderArchiveTab(); });
+                unsubscribeVolunteers = db.collection("volunteers").onSnapshot(snapshot => { snapshot.docChanges().forEach(change => { if (change.type === "added" && !isFirstLoad && !change.doc.data().archived) { sendSystemNotification("Нова анкета волонтера!", change.doc.data().name || 'Хтось заповнив анкету'); } }); globalVolunteersData = []; globalArchivedVolunteers = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.archived) globalArchivedVolunteers.push(d); else globalVolunteersData.push(d); }); renderAllDynamicData(); renderArchiveTab(); });
                 unsubscribeSocials = db.collection("config").doc("socials").onSnapshot(doc => { globalSocialNetworks = (doc.exists && doc.data().list) ? doc.data().list : []; renderAdminSocialList(); });
                 unsubscribeNews = db.collection("news").orderBy("date", "desc").onSnapshot(snapshot => { globalNewsData = []; globalTrashItems.news = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data(), isReport: false }; if (d.deletedAt) globalTrashItems.news.push(d); else globalNewsData.push(d); }); renderAdminNewsChronicle(); renderTrashTab(); });
                 unsubscribeReports = db.collection("reports").orderBy("timestamp", "desc").onSnapshot(snapshot => { globalReportsData = []; globalTrashItems.reports = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data(), isReport: true }; if (d.deletedAt) globalTrashItems.reports.push(d); else globalReportsData.push(d); }); renderAdminNewsChronicle(); renderTrashTab(); });
@@ -2406,6 +2463,7 @@
                 unsubscribeConfig = db.collection("config").doc("shop").onSnapshot(doc => { const data = doc.exists ? doc.data() : {}; const isActive = data.active !== undefined ? data.active : true; const checkbox = document.getElementById('shop-active-checkbox'); const label = document.getElementById('shop-status-label'); if(checkbox) checkbox.checked = isActive; if(label) { if(isActive) { label.innerText = "Магазин увімкнено"; label.style.color = "var(--theme-color)"; } else { label.innerText = "Магазин вимкнено"; label.style.color = "#ff4a4a"; } } globalCategories = data.categories || []; if(data.heroImage) { shopHeroBase64 = data.heroImage; const heroPreview = document.getElementById('shop-hero-preview-element'); if(heroPreview) { heroPreview.src = data.heroImage; heroPreview.style.display = 'block'; } } renderCategoriesAdmin(); populateCategorySelect(); });
                 db.collection("config").doc("heroImages").get().then(doc => { if (doc.exists && Array.isArray(doc.data().images)) { heroImagesArray = doc.data().images; renderHeroImagesPreview(); } }).catch(e => console.error("Фото фону головної:", e));
                 unsubscribePageBackgrounds = db.collection("config").doc("pageBackgrounds").onSnapshot(doc => { globalPageBackgrounds = doc.exists ? doc.data() : {}; renderPageBackgroundsAdmin(); });
+                db.collection("config").doc("contact").get().then(doc => { if (doc.exists) { const d = doc.data(); if (d.phone) document.getElementById('contact-phone-input').value = d.phone; if (d.telegramBot) document.getElementById('contact-telegram-input').value = d.telegramBot; } }).catch(e => console.error("Контакти:", e));
                 unsubscribePromos = db.collection("promocodes").orderBy("created", "desc").onSnapshot(snapshot => { globalPromocodes = []; globalTrashItems.promocodes = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.deletedAt) globalTrashItems.promocodes.push(d); else globalPromocodes.push(d); }); renderPromocodes(); renderTrashTab(); });
                 unsubscribePaymentConfig = db.collection("config").doc("payment").onSnapshot(doc => { if (doc.exists) { const data = doc.data(); const bankInp = document.getElementById('new-donation-link-field'); if(data.bankUrl && bankInp) bankInp.value = data.bankUrl; const cardNumInp = document.getElementById('config-card-number'); if(data.cardNumber && cardNumInp) cardNumInp.value = data.cardNumber; const cardNameInp = document.getElementById('config-card-name'); if(data.cardName && cardNameInp) cardNameInp.value = data.cardName; } });
                 unsubscribeStats = db.collection("config").doc("combat_report").onSnapshot(doc => { if (doc.exists) { const data = doc.data(); const details = data.details || {}; if(document.getElementById('cr-strike')) document.getElementById('cr-strike').value = data.strikeSorties || 0; if(document.getElementById('cr-recon')) document.getElementById('cr-recon').value = data.reconSorties || 0; combatCategories.forEach(cat => { const hitInp = document.getElementById(`cr_${cat.id}_hit`); const destInp = document.getElementById(`cr_${cat.id}_dest`); if(hitInp) hitInp.value = details[`${cat.id}_hit`] || 0; if(destInp) destInp.value = details[`${cat.id}_dest`] || 0; }); calculateTotals(); } });
