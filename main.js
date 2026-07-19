@@ -96,6 +96,75 @@ function createTray() {
     });
 }
 
+// ==================== ОНОВЛЕННЯ (рівень модуля — доступно і з трея, і з app.whenReady) ====================
+function sendUpdateStatus(type, message) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('update-status', { type, message });
+    }
+}
+
+function runUpdateCheck() {
+    if (process.platform === 'darwin') {
+        // Тільки перевірка, без автозавантаження — щоб не намагатись
+        // встановити непідписану збірку в фоні.
+        autoUpdater.checkForUpdates().catch((err) => {
+            console.error("Помилка сервера оновлень (Mac):", err);
+        });
+    } else {
+        autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+            console.error("Помилка сервера оновлень:", err);
+        });
+    }
+}
+
+autoUpdater.on('checking-for-update', () => {
+    sendUpdateStatus('checking', 'Перевірка оновлень...');
+});
+autoUpdater.on('update-available', (info) => {
+    if (process.platform === 'darwin') {
+        // На Mac немає підпису розробника — автооновлення небезпечне й
+        // може не спрацювати коректно. Просто повідомляємо користувача.
+        sendUpdateStatus('mac-manual', `Доступна нова версія ${info.version}. Зверніться до розробника програми для оновлення.`);
+        dialog.showMessageBox({
+            type: 'info',
+            title: 'Доступне оновлення',
+            message: `Доступна нова версія SVAROG Command Center (${info.version}).`,
+            detail: 'Автоматичне оновлення для Mac поки недоступне. Будь ласка, зверніться до розробника програми, щоб отримати нову версію.',
+            buttons: ['Зрозуміло']
+        });
+        return;
+    }
+    sendUpdateStatus('available', `Знайдено оновлення ${info.version}, завантажується...`);
+});
+autoUpdater.on('update-not-available', () => {
+    sendUpdateStatus('none', 'У вас остання версія програми.');
+});
+autoUpdater.on('download-progress', (progress) => {
+    sendUpdateStatus('downloading', `Завантаження оновлення: ${Math.round(progress.percent)}%`);
+    if (splashWindow && !splashWindow.isDestroyed()) {
+        splashWindow.webContents.send('update-progress', { percent: Math.round(progress.percent), speed: `${Math.round(progress.bytesPerSecond / 1024)} KB/s` });
+    }
+});
+autoUpdater.on('error', (err) => {
+    sendUpdateStatus('error', 'Помилка перевірки оновлень.');
+    console.error("Помилка автооновлення:", err);
+});
+
+// Коли оновлення завантажилось, питаємо користувача (лише Windows — на Mac ми сюди не доходимо)
+autoUpdater.on('update-downloaded', () => {
+    dialog.showMessageBox({
+        type: 'info',
+        title: 'Оновлення системи',
+        message: 'Нова версія SVAROG Command Center успішно завантажена.',
+        buttons: ['Оновити та перезапустити', 'Зробити це пізніше']
+    }).then((result) => {
+        if (result.response === 0) {
+            isQuitting = true;
+            autoUpdater.quitAndInstall();
+        }
+    });
+});
+
 app.whenReady().then(() => {
     createSplashScreen();
     createTray();
@@ -117,75 +186,6 @@ app.whenReady().then(() => {
             console.log("Режим розробника: оновлення вимкнені");
         }
     }, 2000);
-
-    // --- Видимий статус перевірки оновлень (Windows: повний автооновлювач) ---
-    function sendUpdateStatus(type, message) {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send('update-status', { type, message });
-        }
-    }
-
-    autoUpdater.on('checking-for-update', () => {
-        sendUpdateStatus('checking', 'Перевірка оновлень...');
-    });
-    autoUpdater.on('update-available', (info) => {
-        if (process.platform === 'darwin') {
-            // На Mac немає підпису розробника — автооновлення небезпечне й
-            // може не спрацювати коректно. Просто повідомляємо користувача.
-            sendUpdateStatus('mac-manual', `Доступна нова версія ${info.version}. Зверніться до розробника програми для оновлення.`);
-            dialog.showMessageBox({
-                type: 'info',
-                title: 'Доступне оновлення',
-                message: `Доступна нова версія SVAROG Command Center (${info.version}).`,
-                detail: 'Автоматичне оновлення для Mac поки недоступне. Будь ласка, зверніться до розробника програми, щоб отримати нову версію.',
-                buttons: ['Зрозуміло']
-            });
-            return;
-        }
-        sendUpdateStatus('available', `Знайдено оновлення ${info.version}, завантажується...`);
-    });
-    autoUpdater.on('update-not-available', () => {
-        sendUpdateStatus('none', 'У вас остання версія програми.');
-    });
-    autoUpdater.on('download-progress', (progress) => {
-        sendUpdateStatus('downloading', `Завантаження оновлення: ${Math.round(progress.percent)}%`);
-        if (splashWindow && !splashWindow.isDestroyed()) {
-            splashWindow.webContents.send('update-progress', { percent: Math.round(progress.percent), speed: `${Math.round(progress.bytesPerSecond / 1024)} KB/s` });
-        }
-    });
-    autoUpdater.on('error', (err) => {
-        sendUpdateStatus('error', 'Помилка перевірки оновлень.');
-        console.error("Помилка автооновлення:", err);
-    });
-
-    function runUpdateCheck() {
-        if (process.platform === 'darwin') {
-            // Тільки перевірка, без автозавантаження — щоб не намагатись
-            // встановити непідписану збірку в фоні.
-            autoUpdater.checkForUpdates().catch((err) => {
-                console.error("Помилка сервера оновлень (Mac):", err);
-            });
-        } else {
-            autoUpdater.checkForUpdatesAndNotify().catch((err) => {
-                console.error("Помилка сервера оновлень:", err);
-            });
-        }
-    }
-
-    // Коли оновлення завантажилось, питаємо користувача (лише Windows — на Mac ми сюди не доходимо)
-    autoUpdater.on('update-downloaded', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            title: 'Оновлення системи',
-            message: 'Нова версія SVAROG Command Center успішно завантажена.',
-            buttons: ['Оновити та перезапустити', 'Зробити це пізніше']
-        }).then((result) => {
-            if (result.response === 0) {
-                isQuitting = true;
-                autoUpdater.quitAndInstall();
-            }
-        });
-    });
 });
 
 app.on('window-all-closed', () => {
