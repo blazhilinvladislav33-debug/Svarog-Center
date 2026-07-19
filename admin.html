@@ -188,10 +188,19 @@
             background: rgba(255,255,255,0.03);
         }
 
+        /* === Групування меню (SVAROG Admin Dashboard reskin) === */
+        .nav-group { display: flex; flex-direction: column; gap: 3px; margin-bottom: 14px; }
+        .nav-group-title-row { padding: 0 12px 8px; display: flex; align-items: center; gap: 8px; }
+        .nav-group-title-row span:first-child { font-size: 0.64rem; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; color: #5c5c62; white-space: nowrap; }
+        .nav-group-title-row .nav-group-line { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.08), transparent); }
         .nav-item.active {
-            background: rgba(121, 133, 84, 0.15);
-            color: var(--theme-color);
+            background: linear-gradient(90deg, rgba(121,133,84,0.22), rgba(121,133,84,0.05));
+            color: #a8b788;
+            border: 1px solid rgba(121,133,84,0.4);
+            box-shadow: 0 4px 16px rgba(121,133,84,0.12);
         }
+        .nav-item-icon-badge { flex-shrink: 0; width: 26px; height: 26px; border-radius: 7px; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
+        .nav-item.active .nav-item-icon-badge { background: rgba(121,133,84,0.28); }
 
         .nav-badge {
             background: #ff4a4a;
@@ -268,6 +277,22 @@
             border-radius: 30px;
             border: 1px solid var(--border-color);
         }
+
+        /* === Хедер: статус-піл, ел.пошта, аватар (SVAROG Admin Dashboard reskin) === */
+        .page-title-gradient { background: linear-gradient(135deg,#fff,#c9c9cd); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .header-right-group { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+        .header-online-pill { padding: 9px 16px; border-radius: 20px; background: rgba(121,133,84,0.14); border: 1px solid rgba(121,133,84,0.4); color: #8f9d65; font-size: 0.76rem; font-weight: 700; display: flex; align-items: center; gap: 7px; box-shadow: 0 0 16px rgba(121,133,84,0.15); white-space: nowrap; }
+        .header-online-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: #8f9d65; box-shadow: 0 0 8px #8f9d65; }
+        .header-user-email { font-size: 0.8rem; color: #c9c9cd; white-space: nowrap; }
+        .header-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, rgba(121,133,84,0.4), rgba(121,133,84,0.05)); border: 1px solid var(--theme-color); display: flex; align-items: center; justify-content: center; color: #8f9d65; font-weight: 800; box-shadow: 0 0 14px rgba(121,133,84,0.25); flex-shrink: 0; }
+
+        /* === Картки статистики v2 (SVAROG Admin Dashboard reskin) === */
+        .stat-card-v2 { background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 22px; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.25); cursor: pointer; text-align: left; transition: 0.2s; }
+        .stat-card-v2:hover { border-color: rgba(121,133,84,0.35); transform: translateY(-2px); }
+        .stat-card-v2::before { content: ''; position: absolute; top: -34px; right: -34px; width: 110px; height: 110px; border-radius: 50%; background: radial-gradient(circle, rgba(121,133,84,0.22), transparent 70%); }
+        .stat-card-v2 .stat-icon { width: 44px; height: 44px; border-radius: 11px; background: rgba(121,133,84,0.16); border: 1px solid rgba(121,133,84,0.35); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; position: relative; }
+        .stat-card-v2 .stat-value { font-size: 2.1rem; font-weight: 800; color: #fff; margin-top: 16px; position: relative; letter-spacing: -0.5px; }
+        .stat-card-v2 .stat-label { font-size: 0.8rem; color: #8e8e93; margin-top: 4px; position: relative; }
 
         .lang-btn {
             background: none;
@@ -829,49 +854,71 @@
         <aside class="sidebar">
             <div class="sidebar-header"><img src="logo.png" alt="SVAROG" class="sidebar-logo"><div><div class="sidebar-title">SVAROG ADMIN</div><div class="sidebar-subtitle">Command Center</div></div></div>
             <div class="nav-menu">
-                <button class="nav-item active" onclick="switchTab('home-tab', this, '🏠 Головна')"><div class="nav-item-left"><span>🏠</span> <span>Головна</span></div></button>
-                <button class="nav-item" onclick="switchTab('active-chats-tab', this, '💬 Анонімні чати')"><div class="nav-item-left"><span>💬</span> <span>Чати</span></div><div class="nav-badge" id="badge-chats">0</div></button>
-                <button class="nav-item" onclick="switchTab('admin-chat-tab', this, '👥 Чат адмінів')"><div class="nav-item-left"><span>👥</span> <span>Чат адмінів</span></div><div class="nav-badge" id="badge-admin-chat" style="display:none;">0</div></button>
-                <button class="nav-item" onclick="switchTab('orders-tab', this, '📦 Управління замовленнями')"><div class="nav-item-left"><span>📦</span> <span>Замовлення</span></div><div class="nav-badge" id="badge-orders">0</div></button>
-                <button class="nav-item" onclick="switchTab('shop-management-tab', this, '🛍️ Склад та Магазин')"><div class="nav-item-left"><span>🛍️</span> <span>Магазин</span></div><div class="nav-badge" id="badge-low-stock" style="display:none; background:#ff4a4a;">0</div></button>
-                <button class="nav-item" onclick="switchTab('promo-tab', this, '🎟️ Купони та Сертифікати')"><div class="nav-item-left"><span>🎟️</span> <span>Купони</span></div></button>
-                <button class="nav-item" onclick="switchTab('stats-tab', this, '🦅 Бойовий Звіт (SVAROG)')"><div class="nav-item-left"><span>🦅</span> <span>Звіт SVAROG</span></div></button>
-                <button class="nav-item" onclick="switchTab('link-management-tab', this, '📰 Контент та Налаштування')"><div class="nav-item-left"><span>📰</span> <span>Контент</span></div></button>
-                <button class="nav-item" onclick="switchTab('hub-management-tab', this, '🔗 Мультипосилання (Хаб)')"><div class="nav-item-left"><span>🔗</span> <span>Мультипосилання</span></div></button>
-                <button class="nav-item" onclick="switchTab('feedback-tab', this, '📂 Заявки з сайту')"><div class="nav-item-left"><span>📂</span> <span>Заявки</span></div><div class="nav-badge" id="badge-feedback">0</div></button>
-                <button class="nav-item" onclick="switchTab('volunteer-tab', this, '📋 Анкети волонтерів')"><div class="nav-item-left"><span>📋</span> <span>Волонтери</span></div><div class="nav-badge" id="badge-volunteers">0</div></button>
-                <button class="nav-item" onclick="switchTab('recruiting-tab', this, '🎖️ Заявки на рекрутинг')"><div class="nav-item-left"><span>🎖️</span> <span>Рекрутинг</span></div><div class="nav-badge" id="badge-recruiting">0</div></button>
-                <button class="nav-item" onclick="switchTab('newsletter-tab', this, '✉️ Підписники розсилки')"><div class="nav-item-left"><span>✉️</span> <span>Розсилка</span></div><div class="nav-badge" id="badge-newsletter" style="display:none;">0</div></button>
-                <button class="nav-item" onclick="switchTab('stocknotify-tab', this, '🔔 Очікування товару')"><div class="nav-item-left"><span>🔔</span> <span>Очікування</span></div><div class="nav-badge" id="badge-stocknotify" style="display:none;">0</div></button>
-                <button class="nav-item" onclick="switchTab('archive-tab', this, '🗄️ Архів бази даних')"><div class="nav-item-left"><span>🗄️</span> <span>Архів</span></div></button>
-                <button class="nav-item" id="superadmin-only-tab-btn" onclick="switchTab('admin-management-tab', this, '⚙️ Безпека')" style="display:none; margin-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); border-radius: 0;"><div class="nav-item-left"><span>⚙️</span> <span>Безпека</span></div></button>
-                <button class="nav-item" id="logs-only-tab-btn" onclick="switchTab('logs-tab', this, '📜 Журнал дій')" style="display:none;"><div class="nav-item-left"><span>📜</span> <span>Журнал дій</span></div></button>
-                <button class="nav-item" onclick="switchTab('trash-tab', this, '🗑️ Кошик')"><div class="nav-item-left"><span>🗑️</span> <span>Кошик</span></div><div class="nav-badge" id="badge-trash" style="display:none;">0</div></button>
+                <div class="nav-group">
+                    <div class="nav-group-title-row"><span>Огляд</span><span class="nav-group-line"></span></div>
+                    <button class="nav-item active" onclick="switchTab('home-tab', this, '🏠 Головна')"><div class="nav-item-left"><span class="nav-item-icon-badge">🏠</span> <span>Головна</span></div></button>
+                </div>
+                <div class="nav-group">
+                    <div class="nav-group-title-row"><span>Комунікація</span><span class="nav-group-line"></span></div>
+                    <button class="nav-item" onclick="switchTab('active-chats-tab', this, '💬 Анонімні чати')"><div class="nav-item-left"><span class="nav-item-icon-badge">💬</span> <span>Чати</span></div><div class="nav-badge" id="badge-chats">0</div></button>
+                    <button class="nav-item" onclick="switchTab('admin-chat-tab', this, '👥 Чат адмінів')"><div class="nav-item-left"><span class="nav-item-icon-badge">👥</span> <span>Чат адмінів</span></div><div class="nav-badge" id="badge-admin-chat" style="display:none;">0</div></button>
+                </div>
+                <div class="nav-group">
+                    <div class="nav-group-title-row"><span>Продажі</span><span class="nav-group-line"></span></div>
+                    <button class="nav-item" onclick="switchTab('orders-tab', this, '📦 Управління замовленнями')"><div class="nav-item-left"><span class="nav-item-icon-badge">📦</span> <span>Замовлення</span></div><div class="nav-badge" id="badge-orders">0</div></button>
+                    <button class="nav-item" onclick="switchTab('shop-management-tab', this, '🛍️ Склад та Магазин')"><div class="nav-item-left"><span class="nav-item-icon-badge">🛍️</span> <span>Магазин</span></div><div class="nav-badge" id="badge-low-stock" style="display:none; background:#ff4a4a;">0</div></button>
+                    <button class="nav-item" onclick="switchTab('promo-tab', this, '🎟️ Купони та Сертифікати')"><div class="nav-item-left"><span class="nav-item-icon-badge">🎟️</span> <span>Купони</span></div></button>
+                </div>
+                <div class="nav-group">
+                    <div class="nav-group-title-row"><span>Контент</span><span class="nav-group-line"></span></div>
+                    <button class="nav-item" onclick="switchTab('stats-tab', this, '🦅 Бойовий Звіт (SVAROG)')"><div class="nav-item-left"><span class="nav-item-icon-badge">🦅</span> <span>Звіт SVAROG</span></div></button>
+                    <button class="nav-item" onclick="switchTab('link-management-tab', this, '📰 Контент та Налаштування')"><div class="nav-item-left"><span class="nav-item-icon-badge">📰</span> <span>Контент</span></div></button>
+                    <button class="nav-item" onclick="switchTab('hub-management-tab', this, '🔗 Мультипосилання (Хаб)')"><div class="nav-item-left"><span class="nav-item-icon-badge">🔗</span> <span>Мультипосилання</span></div></button>
+                </div>
+                <div class="nav-group">
+                    <div class="nav-group-title-row"><span>Заявки та люди</span><span class="nav-group-line"></span></div>
+                    <button class="nav-item" onclick="switchTab('feedback-tab', this, '📂 Заявки з сайту')"><div class="nav-item-left"><span class="nav-item-icon-badge">📂</span> <span>Заявки</span></div><div class="nav-badge" id="badge-feedback">0</div></button>
+                    <button class="nav-item" onclick="switchTab('volunteer-tab', this, '📋 Анкети волонтерів')"><div class="nav-item-left"><span class="nav-item-icon-badge">📋</span> <span>Волонтери</span></div><div class="nav-badge" id="badge-volunteers">0</div></button>
+                    <button class="nav-item" onclick="switchTab('recruiting-tab', this, '🎖️ Заявки на рекрутинг')"><div class="nav-item-left"><span class="nav-item-icon-badge">🎖️</span> <span>Рекрутинг</span></div><div class="nav-badge" id="badge-recruiting">0</div></button>
+                    <button class="nav-item" onclick="switchTab('newsletter-tab', this, '✉️ Підписники розсилки')"><div class="nav-item-left"><span class="nav-item-icon-badge">✉️</span> <span>Розсилка</span></div><div class="nav-badge" id="badge-newsletter" style="display:none;">0</div></button>
+                    <button class="nav-item" onclick="switchTab('stocknotify-tab', this, '🔔 Очікування товару')"><div class="nav-item-left"><span class="nav-item-icon-badge">🔔</span> <span>Очікування</span></div><div class="nav-badge" id="badge-stocknotify" style="display:none;">0</div></button>
+                </div>
+                <div class="nav-group">
+                    <div class="nav-group-title-row"><span>Система</span><span class="nav-group-line"></span></div>
+                    <button class="nav-item" onclick="switchTab('archive-tab', this, '🗄️ Архів бази даних')"><div class="nav-item-left"><span class="nav-item-icon-badge">🗄️</span> <span>Архів</span></div></button>
+                    <button class="nav-item" id="superadmin-only-tab-btn" onclick="switchTab('admin-management-tab', this, '⚙️ Безпека')" style="display:none;"><div class="nav-item-left"><span class="nav-item-icon-badge">⚙️</span> <span>Безпека</span></div></button>
+                    <button class="nav-item" id="logs-only-tab-btn" onclick="switchTab('logs-tab', this, '📜 Журнал дій')" style="display:none;"><div class="nav-item-left"><span class="nav-item-icon-badge">📜</span> <span>Журнал дій</span></div></button>
+                    <button class="nav-item" onclick="switchTab('trash-tab', this, '🗑️ Кошик')"><div class="nav-item-left"><span class="nav-item-icon-badge">🗑️</span> <span>Кошик</span></div><div class="nav-badge" id="badge-trash" style="display:none;">0</div></button>
+                </div>
             </div>
             <div class="sidebar-footer"><div style="font-size: 0.75rem; color: #888; text-align: center; margin-bottom: 10px;" id="current-admin-email">admin@svarog.com</div><button class="logout-btn" onclick="handleLogout()">🚪 Вийти з системи</button></div>
         </aside>
 
         <main class="main-area">
-            <header class="top-bar"><h1 class="page-title" id="top-page-title">💬 Анонімні чати</h1><div class="lang-switcher"><button class="lang-btn active" onclick="setLanguage('ua')">UA</button><button class="lang-btn" onclick="setLanguage('en')">EN</button></div></header>
+            <header class="top-bar"><h1 class="page-title page-title-gradient" id="top-page-title">💬 Анонімні чати</h1><div class="header-right-group"><div class="header-online-pill"><span class="dot"></span>Онлайн</div><div class="header-user-email" id="header-admin-email"></div><div class="header-avatar" id="header-admin-avatar">S</div><div class="lang-switcher"><button class="lang-btn active" onclick="setLanguage('ua')">UA</button><button class="lang-btn" onclick="setLanguage('en')">EN</button></div></div></header>
 
             <div class="workspace">
                 <div id="home-tab" class="tab-content active">
                     <div class="grid-4" style="margin-bottom: 25px;">
-                        <div class="admin-card" style="margin:0; text-align:center; padding:20px; border-top: 3px solid var(--theme-color); cursor:pointer;" onclick="switchTab('orders-tab', null, '📦 Замовлення')">
-                            <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px;">🆕 Нових замовлень</div>
-                            <div id="home-stat-orders" style="font-size:2.2rem; font-weight:800; color:var(--text-main);">0</div>
+                        <div class="stat-card-v2" onclick="switchTab('orders-tab', null, '📦 Замовлення')">
+                            <div class="stat-icon">🆕</div>
+                            <div class="stat-value" id="home-stat-orders">0</div>
+                            <div class="stat-label">Нових замовлень</div>
                         </div>
-                        <div class="admin-card" style="margin:0; text-align:center; padding:20px; cursor:pointer;" onclick="switchTab('active-chats-tab', null, '💬 Анонімні чати')">
-                            <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px;">💬 Активних чатів</div>
-                            <div id="home-stat-chats" style="font-size:2.2rem; font-weight:800; color:var(--theme-color);">0</div>
+                        <div class="stat-card-v2" onclick="switchTab('active-chats-tab', null, '💬 Анонімні чати')">
+                            <div class="stat-icon">💬</div>
+                            <div class="stat-value" id="home-stat-chats">0</div>
+                            <div class="stat-label">Активних чатів</div>
                         </div>
-                        <div class="admin-card" style="margin:0; text-align:center; padding:20px; cursor:pointer;" onclick="switchTab('volunteer-tab', null, '📋 Анкети волонтерів')">
-                            <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px;">📋 Нових анкет волонтерів</div>
-                            <div id="home-stat-volunteers" style="font-size:2.2rem; font-weight:800; color:#00ffcc;">0</div>
+                        <div class="stat-card-v2" onclick="switchTab('volunteer-tab', null, '📋 Анкети волонтерів')">
+                            <div class="stat-icon">📋</div>
+                            <div class="stat-value" id="home-stat-volunteers">0</div>
+                            <div class="stat-label">Нових анкет волонтерів</div>
                         </div>
-                        <div class="admin-card" style="margin:0; text-align:center; padding:20px; cursor:pointer;" onclick="switchTab('feedback-tab', null, '📂 Заявки з сайту')">
-                            <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px;">📂 Нових звернень</div>
-                            <div id="home-stat-feedback" style="font-size:2.2rem; font-weight:800; color:#fff;">0</div>
+                        <div class="stat-card-v2" onclick="switchTab('feedback-tab', null, '📂 Заявки з сайту')">
+                            <div class="stat-icon">📂</div>
+                            <div class="stat-value" id="home-stat-feedback">0</div>
+                            <div class="stat-label">Нових звернень</div>
                         </div>
                     </div>
                     <div class="grid-2">
@@ -1558,7 +1605,7 @@
         }
 
         firebase.auth().onAuthStateChanged(async (user) => {
-            if (user) { const isAdmin = await checkAdminAccess(user.email); if (isAdmin) { document.getElementById('current-admin-email').innerText = user.email; enterDashboard(); } else { showToast("Немає прав доступу.", "error"); await firebase.auth().signOut(); } }
+            if (user) { const isAdmin = await checkAdminAccess(user.email); if (isAdmin) { document.getElementById('current-admin-email').innerText = user.email; const headerEmailEl = document.getElementById('header-admin-email'); const headerAvatarEl = document.getElementById('header-admin-avatar'); if (headerEmailEl) headerEmailEl.innerText = user.email; if (headerAvatarEl) headerAvatarEl.innerText = (user.email || 'S').charAt(0).toUpperCase(); enterDashboard(); } else { showToast("Немає прав доступу.", "error"); await firebase.auth().signOut(); } }
             else { document.getElementById('login-screen').style.display = 'flex'; document.getElementById('app-main').style.display = 'none'; }
         });
 
