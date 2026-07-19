@@ -918,6 +918,16 @@
                     <div class="grid-2">
                         <div style="display: flex; flex-direction: column; gap: 20px;">
                             <div class="admin-card"><h3 class="card-title">Статус Магазину</h3><div style="display: flex; align-items: center; gap: 15px; cursor: pointer;" onclick="toggleShopStatus()"><input type="checkbox" id="shop-active-checkbox" style="width: 20px; height: 20px; accent-color: var(--theme-color);"><label style="font-size:1.1rem; font-weight:bold; cursor:pointer;" id="shop-status-label">Магазин увімкнено</label></div></div>
+                            <div class="admin-card" style="border-color:#ffaa00;">
+                                <h3 class="card-title" style="color:#ffaa00; border-bottom-color: rgba(255, 170, 0, 0.3);">📢 Сповіщення для клієнтів</h3>
+                                <p style="font-size:0.8rem; color:#aaa; margin-bottom:12px;">Наприклад: затримки з доставкою, тимчасові проблеми з оплатою тощо. Показується банером зверху сторінки магазину, коли увімкнено.</p>
+                                <div style="display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom:14px;" onclick="toggleShopAnnouncement()">
+                                    <input type="checkbox" id="shop-announcement-checkbox" style="width: 20px; height: 20px; accent-color: #ffaa00;">
+                                    <label style="font-size:0.95rem; font-weight:bold; cursor:pointer;" id="shop-announcement-status-label">Сповіщення вимкнено</label>
+                                </div>
+                                <div class="form-group"><textarea id="shop-announcement-text" class="form-input" placeholder="Наприклад: Через велику кількість замовлень доставка може затримуватись на 2-3 дні." style="min-height:70px;"></textarea></div>
+                                <button class="btn btn-outline" style="width:100%; border-color:#ffaa00; color:#ffaa00;" onclick="saveShopAnnouncementText()">Зберегти текст</button>
+                            </div>
                             <div class="admin-card"><h3 class="card-title">Категорії каталогу</h3><div id="admin-category-list" style="display: flex; flex-direction:column; gap: 10px; margin-bottom: 15px;"></div><div class="form-group"><input type="text" id="new-category-input" class="form-input" placeholder="Нова категорія (напр: Шеврони)"></div><div class="form-group"><label class="form-label">Іконка для категорії:</label><input type="file" id="new-category-icon-file" accept="image/*" class="form-input" style="padding: 8px;"></div><button class="btn" style="width:100%;" onclick="addCategory()">+ Додати категорію</button></div>
                             <div class="admin-card"><h3 class="card-title">📏 Бібліотека розмірних сіток</h3><p style="font-size:0.8rem; color:#aaa; margin-bottom:10px;">Завантаж еталонну сітку один раз — і обирай її потім у будь-якому товарі зі списку.</p><div id="size-charts-list" style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px;"></div><div class="form-group"><input type="text" id="new-sizechart-name" class="form-input" placeholder="Назва (напр: Футболки)"></div><div class="form-group"><input type="file" id="new-sizechart-file" accept="image/*" class="form-input" style="padding:8px;"></div><button class="btn" style="width:100%;" onclick="addSizeChart()">+ Додати сітку</button></div>
                         </div>
@@ -1229,7 +1239,7 @@
         let globalHubLinks = []; let globalHubClicks = [];
 
         let unsubscribeChats = null; let unsubscribeFeedback = null; let unsubscribeVolunteers = null; let unsubscribeSocials = null;
-        let unsubscribeRecruiting = null; let unsubscribeNewsletter = null; let unsubscribeSizeCharts = null; let unsubscribePageBackgrounds = null;
+        let unsubscribeRecruiting = null; let unsubscribeNewsletter = null; let unsubscribeSizeCharts = null; let unsubscribePageBackgrounds = null; let unsubscribeAnnouncement = null;
         let unsubscribeNews = null; let unsubscribeOrders = null; let unsubscribeMerch = null; let unsubscribeConfig = null;
         let unsubscribePromos = null; let unsubscribePaymentConfig = null; let unsubscribeReports = null; let unsubscribeStats = null;
         let unsubscribeStatsReal = null; let unsubscribeAdminRequests = null; let unsubscribeAdmins = null;
@@ -1759,6 +1769,13 @@
 
         // --- МАГАЗИН ---
         function toggleShopStatus() { setTimeout(async () => { const checkbox = document.getElementById('shop-active-checkbox'); if(!checkbox) return; try { await db.collection("config").doc("shop").set({ active: checkbox.checked }, { merge: true }); showToast("Статус оновлено.", "success"); logAdminAction("shop", `${checkbox.checked ? 'Увімкнув' : 'Вимкнув'} магазин`); } catch(e) { showToast(e.message, "error"); } }, 50); }
+
+        function toggleShopAnnouncement() { setTimeout(async () => { const checkbox = document.getElementById('shop-announcement-checkbox'); if(!checkbox) return; try { await db.collection("config").doc("announcement").set({ enabled: checkbox.checked }, { merge: true }); showToast("Оновлено.", "success"); logAdminAction("shop", `${checkbox.checked ? 'Увімкнув' : 'Вимкнув'} сповіщення для клієнтів`); } catch(e) { showToast(e.message, "error"); } }, 50); }
+        async function saveShopAnnouncementText() {
+            const text = document.getElementById('shop-announcement-text').value.trim();
+            try { await db.collection("config").doc("announcement").set({ text }, { merge: true }); showToast("Текст збережено!", "success"); logAdminAction("shop", "Оновив текст сповіщення для клієнтів"); }
+            catch(e) { showToast(e.message, "error"); }
+        }
         function renderSizeChartsAdmin() {
             const box = document.getElementById('size-charts-list'); if (!box) return;
             if (globalSizeCharts.length === 0) { box.innerHTML = '<span style="color:#aaa; font-size:0.85rem;">Немає сіток у бібліотеці</span>'; return; }
@@ -2461,6 +2478,7 @@
 
                 unsubscribeMerch = db.collection("merch").onSnapshot(snapshot => { globalMerchData = []; globalTrashItems.merch = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.deletedAt) { globalTrashItems.merch.push(d); return; } globalMerchData.push(d); }); globalMerchData.sort((a, b) => { let orderA = a.order !== undefined ? a.order : Number.MAX_SAFE_INTEGER; let orderB = b.order !== undefined ? b.order : Number.MAX_SAFE_INTEGER; if (orderA === orderB) { let timeA = a.timestamp ? a.timestamp.toMillis() : 0; let timeB = b.timestamp ? b.timestamp.toMillis() : 0; return timeB - timeA; } return orderA - orderB; }); renderMerchList(); checkLowStock(); renderTrashTab(); });
                 unsubscribeConfig = db.collection("config").doc("shop").onSnapshot(doc => { const data = doc.exists ? doc.data() : {}; const isActive = data.active !== undefined ? data.active : true; const checkbox = document.getElementById('shop-active-checkbox'); const label = document.getElementById('shop-status-label'); if(checkbox) checkbox.checked = isActive; if(label) { if(isActive) { label.innerText = "Магазин увімкнено"; label.style.color = "var(--theme-color)"; } else { label.innerText = "Магазин вимкнено"; label.style.color = "#ff4a4a"; } } globalCategories = data.categories || []; if(data.heroImage) { shopHeroBase64 = data.heroImage; const heroPreview = document.getElementById('shop-hero-preview-element'); if(heroPreview) { heroPreview.src = data.heroImage; heroPreview.style.display = 'block'; } } renderCategoriesAdmin(); populateCategorySelect(); });
+                unsubscribeAnnouncement = db.collection("config").doc("announcement").onSnapshot(doc => { const data = doc.exists ? doc.data() : {}; const checkbox = document.getElementById('shop-announcement-checkbox'); const label = document.getElementById('shop-announcement-status-label'); const textField = document.getElementById('shop-announcement-text'); if(checkbox) checkbox.checked = data.enabled || false; if(label) { label.innerText = data.enabled ? "Сповіщення увімкнено" : "Сповіщення вимкнено"; label.style.color = data.enabled ? "#ffaa00" : "#aaa"; } if(textField && document.activeElement !== textField) textField.value = data.text || ''; });
                 db.collection("config").doc("heroImages").get().then(doc => { if (doc.exists && Array.isArray(doc.data().images)) { heroImagesArray = doc.data().images; renderHeroImagesPreview(); } }).catch(e => console.error("Фото фону головної:", e));
                 unsubscribePageBackgrounds = db.collection("config").doc("pageBackgrounds").onSnapshot(doc => { globalPageBackgrounds = doc.exists ? doc.data() : {}; renderPageBackgroundsAdmin(); });
                 db.collection("config").doc("contact").get().then(doc => { if (doc.exists) { const d = doc.data(); if (d.phone) document.getElementById('contact-phone-input').value = d.phone; if (d.telegramBot) document.getElementById('contact-telegram-input').value = d.telegramBot; } }).catch(e => console.error("Контакти:", e));
