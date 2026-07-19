@@ -842,6 +842,7 @@
                 <button class="nav-item" onclick="switchTab('volunteer-tab', this, '📋 Анкети волонтерів')"><div class="nav-item-left"><span>📋</span> <span>Волонтери</span></div><div class="nav-badge" id="badge-volunteers">0</div></button>
                 <button class="nav-item" onclick="switchTab('recruiting-tab', this, '🎖️ Заявки на рекрутинг')"><div class="nav-item-left"><span>🎖️</span> <span>Рекрутинг</span></div><div class="nav-badge" id="badge-recruiting">0</div></button>
                 <button class="nav-item" onclick="switchTab('newsletter-tab', this, '✉️ Підписники розсилки')"><div class="nav-item-left"><span>✉️</span> <span>Розсилка</span></div><div class="nav-badge" id="badge-newsletter" style="display:none;">0</div></button>
+                <button class="nav-item" onclick="switchTab('stocknotify-tab', this, '🔔 Очікування товару')"><div class="nav-item-left"><span>🔔</span> <span>Очікування</span></div><div class="nav-badge" id="badge-stocknotify" style="display:none;">0</div></button>
                 <button class="nav-item" onclick="switchTab('archive-tab', this, '🗄️ Архів бази даних')"><div class="nav-item-left"><span>🗄️</span> <span>Архів</span></div></button>
                 <button class="nav-item" id="superadmin-only-tab-btn" onclick="switchTab('admin-management-tab', this, '⚙️ Безпека')" style="display:none; margin-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); border-radius: 0;"><div class="nav-item-left"><span>⚙️</span> <span>Безпека</span></div></button>
                 <button class="nav-item" id="logs-only-tab-btn" onclick="switchTab('logs-tab', this, '📜 Журнал дій')" style="display:none;"><div class="nav-item-left"><span>📜</span> <span>Журнал дій</span></div></button>
@@ -1157,6 +1158,15 @@
                                 <div class="form-group"><label class="form-label">Посилання на Telegram-бота:</label><input type="text" id="contact-telegram-input" class="form-input" placeholder="https://t.me/svarogteam_bot"></div>
                                 <button class="btn btn-outline" style="width:100%; border-color:#7fdbff; color:#7fdbff;" onclick="saveContactInfo()">Зберегти контакти</button>
                             </div>
+                            <div class="admin-card" style="border-color: #b28dff;">
+                                <h3 class="card-title" style="color:#b28dff; border-bottom-color: rgba(178, 141, 255, 0.3);">🤝 Партнери / Фонди</h3>
+                                <p style="font-size:0.8rem; color:#aaa; margin-bottom:12px;">Показуються окремим блоком на сторінці підтримки. Клік по логотипу відкриває посилання.</p>
+                                <div id="partners-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;"></div>
+                                <div class="form-group"><input type="text" id="new-partner-name" class="form-input" placeholder="Назва партнера/фонду"></div>
+                                <div class="form-group"><input type="text" id="new-partner-url" class="form-input" placeholder="https://..."></div>
+                                <div class="form-group"><label class="form-label">Логотип/фото:</label><input type="file" id="new-partner-file" accept="image/*" class="form-input" style="padding:8px;"></div>
+                                <button class="btn" style="width:100%; background:#b28dff;" onclick="addPartner()">+ Додати партнера</button>
+                            </div>
                             <div class="admin-card" style="border-color: #00bfff;">
                                 <h3 class="card-title" style="color:#00bfff; border-bottom-color: rgba(0, 191, 255, 0.3);">🖼️ Банер магазину</h3>
                                 <div class="form-group"><input type="file" id="shop-hero-file" accept="image/*" class="form-input" onchange="previewShopHero(this)" style="padding: 8px;"><img id="shop-hero-preview-element" src="" style="width:100%; max-height:120px; object-fit:cover; margin-top:10px; border-radius:8px; display:none;"></div>
@@ -1170,6 +1180,7 @@
                 <div id="feedback-tab" class="tab-content"><button class="btn btn-outline" style="margin-bottom:15px;" onclick="exportToCSV('siteFeedbackData', 'Feedback_Requests')">📊 Експорт в Excel</button><div id="box-for-feedback" style="display:flex; flex-direction:column; gap:15px;"></div></div>
                 <div id="recruiting-tab" class="tab-content"><button class="btn btn-outline" style="margin-bottom:15px;" onclick="exportToCSV('recruitingData', 'Recruiting_Applications')">📊 Експорт в Excel</button><div id="box-for-recruiting" style="display:flex; flex-direction:column; gap:15px;"></div></div>
                 <div id="newsletter-tab" class="tab-content"><button class="btn btn-outline" style="margin-bottom:15px;" onclick="exportToCSV('newsletterData', 'Newsletter_Subscribers')">📊 Експорт в Excel</button><div id="box-for-newsletter" style="display:flex; flex-direction:column; gap:15px;"></div></div>
+                <div id="stocknotify-tab" class="tab-content"><button class="btn btn-outline" style="margin-bottom:15px;" onclick="exportToCSV('stockNotifyData', 'Stock_Notifications')">📊 Експорт в Excel</button><div id="box-for-stocknotify" style="display:flex; flex-direction:column; gap:15px;"></div></div>
                 <div id="volunteer-tab" class="tab-content"><div style="display:flex; gap:10px; align-items:center; margin-bottom:15px; flex-wrap:wrap;"><button class="btn btn-outline" style="width:auto; margin-bottom:0;" onclick="exportToCSV('siteVolunteerData', 'Volunteer_Forms')">📊 Експорт в Excel</button><input type="text" id="volunteers-search-input" class="form-input" style="max-width:250px; margin-bottom:0;" placeholder="🔍 Пошук: ім'я, телефон..." oninput="renderVolunteersList()"></div><div id="box-for-volunteers" style="display:flex; flex-direction:column; gap:15px;"></div></div>
                 <div id="archive-tab" class="tab-content"><div id="box-for-archive" style="display:flex; flex-direction:column; gap:15px;"></div></div>
 
@@ -1232,14 +1243,14 @@
         let reportExtraImagesArray = []; let reportLinksArray = []; let merchSizeChartCustomBase64 = "";
         let newsImagePosition = "50% 50%"; let merchImagePosition = "50% 50%";
         let globalChatsData = {}; let globalNewsData = []; let globalFeedbackData = []; let globalVolunteersData = [];
-        let globalRecruitingData = []; let globalNewsletterData = []; let globalSizeCharts = [];
+        let globalRecruitingData = []; let globalNewsletterData = []; let globalSizeCharts = []; let globalStockNotifyData = [];
         let globalArchivedVolunteers = []; let globalArchivedFeedback = []; let globalAdminNamesMap = {};
         let globalSocialNetworks = []; let globalOrdersData = []; let globalMerchData = []; let globalCategories = [];
         let globalPromocodes = []; let globalReportsData = []; let globalAdminRequests = []; let globalActiveAdmins = [];
         let globalHubLinks = []; let globalHubClicks = [];
 
         let unsubscribeChats = null; let unsubscribeFeedback = null; let unsubscribeVolunteers = null; let unsubscribeSocials = null;
-        let unsubscribeRecruiting = null; let unsubscribeNewsletter = null; let unsubscribeSizeCharts = null; let unsubscribePageBackgrounds = null; let unsubscribeAnnouncement = null;
+        let unsubscribeRecruiting = null; let unsubscribeNewsletter = null; let unsubscribeSizeCharts = null; let unsubscribePageBackgrounds = null; let unsubscribeAnnouncement = null; let unsubscribePartners = null; let unsubscribeStockNotify = null;
         let unsubscribeNews = null; let unsubscribeOrders = null; let unsubscribeMerch = null; let unsubscribeConfig = null;
         let unsubscribePromos = null; let unsubscribePaymentConfig = null; let unsubscribeReports = null; let unsubscribeStats = null;
         let unsubscribeStatsReal = null; let unsubscribeAdminRequests = null; let unsubscribeAdmins = null;
@@ -1452,7 +1463,7 @@
             });
         }
 
-        function renderAllDynamicData() { renderChatsList(); renderOrdersList(); updateBadgesLogic(); renderFeedbackList(); renderVolunteersList(); renderRecruitingList(); renderNewsletterList(); renderOrdersChart(); renderHomeOverview(); }
+        function renderAllDynamicData() { renderChatsList(); renderOrdersList(); updateBadgesLogic(); renderFeedbackList(); renderVolunteersList(); renderRecruitingList(); renderNewsletterList(); renderStockNotifyList(); renderOrdersChart(); renderHomeOverview(); }
 
         let homeChartInstance = null;
         function renderHomeOverview() {
@@ -1881,6 +1892,15 @@
         async function deleteRecruitingItem(id) { if(confirm("Видалити заявку на рекрутинг?")) { try { await db.collection("recruiting_applications").doc(id).delete(); showToast("Видалено.", "success"); logAdminAction("recruiting", `Видалив заявку на рекрутинг (id: ${id})`); } catch(e) { showToast(e.message, "error"); } } }
 
         function renderNewsletterList() { const box = document.getElementById('box-for-newsletter'); if(!box) return; if(globalNewsletterData.length === 0) { box.innerHTML = '<div class="no-msg">Немає підписників</div>'; return; } box.innerHTML = `<div style="margin-bottom:12px; color:#aaa; font-size:0.9rem;">Усього підписників: ${globalNewsletterData.length}</div>` + globalNewsletterData.map(item => { let dateStr = item.time || (item.timestamp ? new Date(item.timestamp.toMillis()).toLocaleString('uk-UA') : ''); return `<div class="admin-card" style="position:relative; padding:14px 20px; margin:0; display:flex; justify-content:space-between; align-items:center;"><div><span style="font-weight:bold; color:#fff;">${item.email || ''}</span> <span style="font-size:0.8rem; color:#888; margin-left:10px;">${dateStr}</span></div><button class="btn btn-outline" style="border-color:#ff4a4a; color:#ff4a4a; padding:5px 10px; font-size:0.8rem;" onclick="deleteNewsletterItem('${item.id}')">🗑</button></div>`; }).join(''); }
+
+        function renderStockNotifyList() {
+            const box = document.getElementById('box-for-stocknotify'); if (!box) return;
+            if (globalStockNotifyData.length === 0) { box.innerHTML = '<div class="no-msg">Ніхто ще не чекає на товар</div>'; return; }
+            const grouped = {};
+            globalStockNotifyData.forEach(item => { const key = item.merchTitle || 'Невідомий товар'; if (!grouped[key]) grouped[key] = []; grouped[key].push(item); });
+            box.innerHTML = Object.keys(grouped).map(title => `<div class="admin-card" style="padding:16px 20px; margin:0;"><div style="font-weight:bold; color:var(--theme-color); margin-bottom:10px;">${title} <span style="color:#888; font-weight:normal; font-size:0.85rem;">(${grouped[title].length})</span></div>${grouped[title].map(item => { let dateStr = item.time || (item.timestamp ? new Date(item.timestamp.toMillis()).toLocaleString('uk-UA') : ''); return `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-top:1px solid rgba(255,255,255,0.05);"><span style="font-size:0.9rem;">${item.email}</span><span style="display:flex; align-items:center; gap:10px;"><span style="font-size:0.75rem; color:#888;">${dateStr}</span><span style="color:#ff4a4a; cursor:pointer;" onclick="deleteStockNotifyItem('${item.id}')">✖</span></span></div>`; }).join('')}</div>`).join('');
+        }
+        async function deleteStockNotifyItem(id) { try { await db.collection("stock_notifications").doc(id).delete(); showToast("Видалено.", "success"); } catch(e) { showToast(e.message, "error"); } }
         async function deleteNewsletterItem(id) { if(confirm("Видалити підписника?")) { try { await db.collection("newsletter_subscribers").doc(id).delete(); showToast("Видалено.", "success"); logAdminAction("newsletter", `Видалив підписника розсилки (id: ${id})`); } catch(e) { showToast(e.message, "error"); } } }
         async function archiveFeedback(id) { try { await db.collection("feedback").doc(id).update({ archived: true, archivedAt: firebase.firestore.FieldValue.serverTimestamp() }); showToast("Переміщено в архів.", "success"); } catch(e) { showToast(e.message, "error"); } }
         async function permanentlyDeleteFeedback(id) { if(confirm("Видалити заявку НАЗАВЖДИ?")) { try { await db.collection("feedback").doc(id).delete(); showToast("Видалено назавжди.", "success"); } catch(e) { showToast(e.message, "error"); } } }
@@ -1913,7 +1933,7 @@
             box.innerHTML = html;
         }
 
-        function exportToCSV(dataKey, filename) { let data = []; if(dataKey === 'siteFeedbackData') data = globalFeedbackData; if(dataKey === 'siteVolunteerData') data = globalVolunteersData; if(dataKey === 'shopOrdersData') data = globalOrdersData; if(dataKey === 'recruitingData') data = globalRecruitingData; if(dataKey === 'newsletterData') data = globalNewsletterData; if(data.length === 0) { showToast("Немає даних", "warning"); return; } let csvContent = "\uFEFF"; csvContent += Object.keys(data[0]).join(",") + "\r\n"; data.forEach(row => { csvContent += Object.values(row).map(val => `"${String(val ?? "").replace(/"/g, '""')}"`).join(",") + "\r\n"; }); let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = filename + ".csv"; document.body.appendChild(link); link.click(); document.body.removeChild(link); showToast("Експортовано!", "success"); }
+        function exportToCSV(dataKey, filename) { let data = []; if(dataKey === 'siteFeedbackData') data = globalFeedbackData; if(dataKey === 'siteVolunteerData') data = globalVolunteersData; if(dataKey === 'shopOrdersData') data = globalOrdersData; if(dataKey === 'recruitingData') data = globalRecruitingData; if(dataKey === 'newsletterData') data = globalNewsletterData; if(dataKey === 'stockNotifyData') data = globalStockNotifyData; if(data.length === 0) { showToast("Немає даних", "warning"); return; } let csvContent = "\uFEFF"; csvContent += Object.keys(data[0]).join(",") + "\r\n"; data.forEach(row => { csvContent += Object.values(row).map(val => `"${String(val ?? "").replace(/"/g, '""')}"`).join(",") + "\r\n"; }); let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = filename + ".csv"; document.body.appendChild(link); link.click(); document.body.removeChild(link); showToast("Експортовано!", "success"); }
 
         // --- КОНТЕНТ ---
         function toggleMediaInput() { const type = document.getElementById('news-media-type').value; document.getElementById('news-photo-zone').style.display = type === 'image' ? 'block' : 'none'; document.getElementById('news-video-zone').style.display = type === 'video' ? 'block' : 'none'; }
@@ -1974,6 +1994,28 @@
         }
 
         // ==================== КОНТАКТ-ЦЕНТР (телефон + Telegram-бот) ====================
+        // ==================== ПАРТНЕРИ / ФОНДИ ====================
+        let globalPartners = [];
+        function renderPartnersList() {
+            const box = document.getElementById('partners-list'); if (!box) return;
+            if (globalPartners.length === 0) { box.innerHTML = '<span style="color:#aaa; font-size:0.85rem;">Партнерів ще немає</span>'; return; }
+            box.innerHTML = globalPartners.map(p => `<div style="display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px;"><img src="${p.logo}" style="width:36px; height:36px; object-fit:contain; border-radius:4px; background:#fff;"><div style="flex:1;"><div style="font-size:0.9rem;">${p.name}</div><a href="${p.url}" target="_blank" style="font-size:0.75rem; color:#888;">${p.url}</a></div><span style="color:#ff4a4a; cursor:pointer; font-weight:bold;" onclick="deletePartner('${p.id}')">✖</span></div>`).join('');
+        }
+        async function addPartner() {
+            const name = document.getElementById('new-partner-name').value.trim();
+            const url = document.getElementById('new-partner-url').value.trim();
+            const fileInp = document.getElementById('new-partner-file');
+            if (!name || !url) { showToast("Заповніть назву й посилання!", "error"); return; }
+            if (!fileInp.files || !fileInp.files[0]) { showToast("Оберіть логотип!", "error"); return; }
+            try {
+                const logo = await getCompressedBase64(fileInp.files[0]);
+                await db.collection("partners").add({ name, url, logo, order: globalPartners.length, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                document.getElementById('new-partner-name').value = ''; document.getElementById('new-partner-url').value = ''; fileInp.value = '';
+                showToast("Партнера додано!", "success"); logAdminAction("settings", `Додав партнера: ${name}`);
+            } catch(e) { showToast(e.message, "error"); }
+        }
+        async function deletePartner(id) { if (confirm("Видалити цього партнера?")) { try { await db.collection("partners").doc(id).delete(); showToast("Видалено.", "success"); } catch(e) { showToast(e.message, "error"); } } }
+
         async function saveContactInfo() {
             const phone = document.getElementById('contact-phone-input').value.trim();
             const telegramBot = document.getElementById('contact-telegram-input').value.trim();
@@ -2454,6 +2496,7 @@
                 unsubscribeFeedback = db.collection("feedback").onSnapshot(snapshot => { snapshot.docChanges().forEach(change => { if (change.type === "added" && !isFirstLoad && !change.doc.data().archived) { sendSystemNotification("Нове повідомлення з сайту!", change.doc.data().name || 'Хтось написав через форму зв\'язку'); } }); globalFeedbackData = []; globalArchivedFeedback = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.archived) globalArchivedFeedback.push(d); else globalFeedbackData.push(d); }); renderAllDynamicData(); renderArchiveTab(); });
                 unsubscribeRecruiting = db.collection("recruiting_applications").orderBy("timestamp", "desc").onSnapshot(snapshot => { snapshot.docChanges().forEach(change => { if (change.type === "added" && !isFirstLoad) { sendSystemNotification("Нова заявка на рекрутинг!", `${change.doc.data().name || 'Хтось'} подав(ла) заявку на долучення`); } }); globalRecruitingData = []; snapshot.forEach(doc => { globalRecruitingData.push({ id: doc.id, ...doc.data() }); }); renderAllDynamicData(); });
                 unsubscribeNewsletter = db.collection("newsletter_subscribers").orderBy("timestamp", "desc").onSnapshot(snapshot => { snapshot.docChanges().forEach(change => { if (change.type === "added" && !isFirstLoad) { sendSystemNotification("Новий підписник розсилки!", change.doc.data().email || ''); } }); globalNewsletterData = []; snapshot.forEach(doc => { globalNewsletterData.push({ id: doc.id, ...doc.data() }); }); renderAllDynamicData(); });
+                unsubscribeStockNotify = db.collection("stock_notifications").orderBy("timestamp", "desc").onSnapshot(snapshot => { snapshot.docChanges().forEach(change => { if (change.type === "added" && !isFirstLoad) { sendSystemNotification("Хтось чекає на товар!", `${change.doc.data().merchTitle}: ${change.doc.data().email}`); } }); globalStockNotifyData = []; snapshot.forEach(doc => { globalStockNotifyData.push({ id: doc.id, ...doc.data() }); }); renderAllDynamicData(); });
                 unsubscribeSizeCharts = db.collection("sizeCharts").onSnapshot(snapshot => { globalSizeCharts = []; snapshot.forEach(doc => { globalSizeCharts.push({ id: doc.id, ...doc.data() }); }); renderSizeChartsAdmin(); populateSizeChartSelect(); });
                 unsubscribeVolunteers = db.collection("volunteers").onSnapshot(snapshot => { snapshot.docChanges().forEach(change => { if (change.type === "added" && !isFirstLoad && !change.doc.data().archived) { sendSystemNotification("Нова анкета волонтера!", change.doc.data().name || 'Хтось заповнив анкету'); } }); globalVolunteersData = []; globalArchivedVolunteers = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.archived) globalArchivedVolunteers.push(d); else globalVolunteersData.push(d); }); renderAllDynamicData(); renderArchiveTab(); });
                 unsubscribeSocials = db.collection("config").doc("socials").onSnapshot(doc => { globalSocialNetworks = (doc.exists && doc.data().list) ? doc.data().list : []; renderAdminSocialList(); });
@@ -2479,6 +2522,7 @@
                 unsubscribeMerch = db.collection("merch").onSnapshot(snapshot => { globalMerchData = []; globalTrashItems.merch = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.deletedAt) { globalTrashItems.merch.push(d); return; } globalMerchData.push(d); }); globalMerchData.sort((a, b) => { let orderA = a.order !== undefined ? a.order : Number.MAX_SAFE_INTEGER; let orderB = b.order !== undefined ? b.order : Number.MAX_SAFE_INTEGER; if (orderA === orderB) { let timeA = a.timestamp ? a.timestamp.toMillis() : 0; let timeB = b.timestamp ? b.timestamp.toMillis() : 0; return timeB - timeA; } return orderA - orderB; }); renderMerchList(); checkLowStock(); renderTrashTab(); });
                 unsubscribeConfig = db.collection("config").doc("shop").onSnapshot(doc => { const data = doc.exists ? doc.data() : {}; const isActive = data.active !== undefined ? data.active : true; const checkbox = document.getElementById('shop-active-checkbox'); const label = document.getElementById('shop-status-label'); if(checkbox) checkbox.checked = isActive; if(label) { if(isActive) { label.innerText = "Магазин увімкнено"; label.style.color = "var(--theme-color)"; } else { label.innerText = "Магазин вимкнено"; label.style.color = "#ff4a4a"; } } globalCategories = data.categories || []; if(data.heroImage) { shopHeroBase64 = data.heroImage; const heroPreview = document.getElementById('shop-hero-preview-element'); if(heroPreview) { heroPreview.src = data.heroImage; heroPreview.style.display = 'block'; } } renderCategoriesAdmin(); populateCategorySelect(); });
                 unsubscribeAnnouncement = db.collection("config").doc("announcement").onSnapshot(doc => { const data = doc.exists ? doc.data() : {}; const checkbox = document.getElementById('shop-announcement-checkbox'); const label = document.getElementById('shop-announcement-status-label'); const textField = document.getElementById('shop-announcement-text'); if(checkbox) checkbox.checked = data.enabled || false; if(label) { label.innerText = data.enabled ? "Сповіщення увімкнено" : "Сповіщення вимкнено"; label.style.color = data.enabled ? "#ffaa00" : "#aaa"; } if(textField && document.activeElement !== textField) textField.value = data.text || ''; });
+                unsubscribePartners = db.collection("partners").orderBy("order", "asc").onSnapshot(snapshot => { globalPartners = []; snapshot.forEach(doc => { globalPartners.push({ id: doc.id, ...doc.data() }); }); renderPartnersList(); });
                 db.collection("config").doc("heroImages").get().then(doc => { if (doc.exists && Array.isArray(doc.data().images)) { heroImagesArray = doc.data().images; renderHeroImagesPreview(); } }).catch(e => console.error("Фото фону головної:", e));
                 unsubscribePageBackgrounds = db.collection("config").doc("pageBackgrounds").onSnapshot(doc => { globalPageBackgrounds = doc.exists ? doc.data() : {}; renderPageBackgroundsAdmin(); });
                 db.collection("config").doc("contact").get().then(doc => { if (doc.exists) { const d = doc.data(); if (d.phone) document.getElementById('contact-phone-input').value = d.phone; if (d.telegramBot) document.getElementById('contact-telegram-input').value = d.telegramBot; } }).catch(e => console.error("Контакти:", e));
