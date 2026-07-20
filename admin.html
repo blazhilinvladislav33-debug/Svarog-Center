@@ -188,19 +188,10 @@
             background: rgba(255,255,255,0.03);
         }
 
-        /* === Групування меню (SVAROG Admin Dashboard reskin) === */
-        .nav-group { display: flex; flex-direction: column; gap: 3px; margin-bottom: 14px; }
-        .nav-group-title-row { padding: 0 12px 8px; display: flex; align-items: center; gap: 8px; }
-        .nav-group-title-row span:first-child { font-size: 0.64rem; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; color: #5c5c62; white-space: nowrap; }
-        .nav-group-title-row .nav-group-line { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.08), transparent); }
         .nav-item.active {
-            background: linear-gradient(90deg, rgba(121,133,84,0.22), rgba(121,133,84,0.05));
-            color: #a8b788;
-            border: 1px solid rgba(121,133,84,0.4);
-            box-shadow: 0 4px 16px rgba(121,133,84,0.12);
+            background: rgba(121, 133, 84, 0.15);
+            color: var(--theme-color);
         }
-        .nav-item-icon-badge { flex-shrink: 0; width: 26px; height: 26px; border-radius: 7px; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
-        .nav-item.active .nav-item-icon-badge { background: rgba(121,133,84,0.28); }
 
         .nav-badge {
             background: #ff4a4a;
@@ -277,22 +268,6 @@
             border-radius: 30px;
             border: 1px solid var(--border-color);
         }
-
-        /* === Хедер: статус-піл, ел.пошта, аватар (SVAROG Admin Dashboard reskin) === */
-        .page-title-gradient { background: linear-gradient(135deg,#fff,#c9c9cd); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .header-right-group { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-        .header-online-pill { padding: 9px 16px; border-radius: 20px; background: rgba(121,133,84,0.14); border: 1px solid rgba(121,133,84,0.4); color: #8f9d65; font-size: 0.76rem; font-weight: 700; display: flex; align-items: center; gap: 7px; box-shadow: 0 0 16px rgba(121,133,84,0.15); white-space: nowrap; }
-        .header-online-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: #8f9d65; box-shadow: 0 0 8px #8f9d65; }
-        .header-user-email { font-size: 0.8rem; color: #c9c9cd; white-space: nowrap; }
-        .header-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, rgba(121,133,84,0.4), rgba(121,133,84,0.05)); border: 1px solid var(--theme-color); display: flex; align-items: center; justify-content: center; color: #8f9d65; font-weight: 800; box-shadow: 0 0 14px rgba(121,133,84,0.25); flex-shrink: 0; }
-
-        /* === Картки статистики v2 (SVAROG Admin Dashboard reskin) === */
-        .stat-card-v2 { background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 22px; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.25); cursor: pointer; text-align: left; transition: 0.2s; }
-        .stat-card-v2:hover { border-color: rgba(121,133,84,0.35); transform: translateY(-2px); }
-        .stat-card-v2::before { content: ''; position: absolute; top: -34px; right: -34px; width: 110px; height: 110px; border-radius: 50%; background: radial-gradient(circle, rgba(121,133,84,0.22), transparent 70%); }
-        .stat-card-v2 .stat-icon { width: 44px; height: 44px; border-radius: 11px; background: rgba(121,133,84,0.16); border: 1px solid rgba(121,133,84,0.35); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; position: relative; }
-        .stat-card-v2 .stat-value { font-size: 2.1rem; font-weight: 800; color: #fff; margin-top: 16px; position: relative; letter-spacing: -0.5px; }
-        .stat-card-v2 .stat-label { font-size: 0.8rem; color: #8e8e93; margin-top: 4px; position: relative; }
 
         .lang-btn {
             background: none;
@@ -854,71 +829,49 @@
         <aside class="sidebar">
             <div class="sidebar-header"><img src="logo.png" alt="SVAROG" class="sidebar-logo"><div><div class="sidebar-title">SVAROG ADMIN</div><div class="sidebar-subtitle">Command Center</div></div></div>
             <div class="nav-menu">
-                <div class="nav-group">
-                    <div class="nav-group-title-row"><span>Огляд</span><span class="nav-group-line"></span></div>
-                    <button class="nav-item active" onclick="switchTab('home-tab', this, '🏠 Головна')"><div class="nav-item-left"><span class="nav-item-icon-badge">🏠</span> <span>Головна</span></div></button>
-                </div>
-                <div class="nav-group">
-                    <div class="nav-group-title-row"><span>Комунікація</span><span class="nav-group-line"></span></div>
-                    <button class="nav-item" onclick="switchTab('active-chats-tab', this, '💬 Анонімні чати')"><div class="nav-item-left"><span class="nav-item-icon-badge">💬</span> <span>Чати</span></div><div class="nav-badge" id="badge-chats">0</div></button>
-                    <button class="nav-item" onclick="switchTab('admin-chat-tab', this, '👥 Чат адмінів')"><div class="nav-item-left"><span class="nav-item-icon-badge">👥</span> <span>Чат адмінів</span></div><div class="nav-badge" id="badge-admin-chat" style="display:none;">0</div></button>
-                </div>
-                <div class="nav-group">
-                    <div class="nav-group-title-row"><span>Продажі</span><span class="nav-group-line"></span></div>
-                    <button class="nav-item" onclick="switchTab('orders-tab', this, '📦 Управління замовленнями')"><div class="nav-item-left"><span class="nav-item-icon-badge">📦</span> <span>Замовлення</span></div><div class="nav-badge" id="badge-orders">0</div></button>
-                    <button class="nav-item" onclick="switchTab('shop-management-tab', this, '🛍️ Склад та Магазин')"><div class="nav-item-left"><span class="nav-item-icon-badge">🛍️</span> <span>Магазин</span></div><div class="nav-badge" id="badge-low-stock" style="display:none; background:#ff4a4a;">0</div></button>
-                    <button class="nav-item" onclick="switchTab('promo-tab', this, '🎟️ Купони та Сертифікати')"><div class="nav-item-left"><span class="nav-item-icon-badge">🎟️</span> <span>Купони</span></div></button>
-                </div>
-                <div class="nav-group">
-                    <div class="nav-group-title-row"><span>Контент</span><span class="nav-group-line"></span></div>
-                    <button class="nav-item" onclick="switchTab('stats-tab', this, '🦅 Бойовий Звіт (SVAROG)')"><div class="nav-item-left"><span class="nav-item-icon-badge">🦅</span> <span>Звіт SVAROG</span></div></button>
-                    <button class="nav-item" onclick="switchTab('link-management-tab', this, '📰 Контент та Налаштування')"><div class="nav-item-left"><span class="nav-item-icon-badge">📰</span> <span>Контент</span></div></button>
-                    <button class="nav-item" onclick="switchTab('hub-management-tab', this, '🔗 Мультипосилання (Хаб)')"><div class="nav-item-left"><span class="nav-item-icon-badge">🔗</span> <span>Мультипосилання</span></div></button>
-                </div>
-                <div class="nav-group">
-                    <div class="nav-group-title-row"><span>Заявки та люди</span><span class="nav-group-line"></span></div>
-                    <button class="nav-item" onclick="switchTab('feedback-tab', this, '📂 Заявки з сайту')"><div class="nav-item-left"><span class="nav-item-icon-badge">📂</span> <span>Заявки</span></div><div class="nav-badge" id="badge-feedback">0</div></button>
-                    <button class="nav-item" onclick="switchTab('volunteer-tab', this, '📋 Анкети волонтерів')"><div class="nav-item-left"><span class="nav-item-icon-badge">📋</span> <span>Волонтери</span></div><div class="nav-badge" id="badge-volunteers">0</div></button>
-                    <button class="nav-item" onclick="switchTab('recruiting-tab', this, '🎖️ Заявки на рекрутинг')"><div class="nav-item-left"><span class="nav-item-icon-badge">🎖️</span> <span>Рекрутинг</span></div><div class="nav-badge" id="badge-recruiting">0</div></button>
-                    <button class="nav-item" onclick="switchTab('newsletter-tab', this, '✉️ Підписники розсилки')"><div class="nav-item-left"><span class="nav-item-icon-badge">✉️</span> <span>Розсилка</span></div><div class="nav-badge" id="badge-newsletter" style="display:none;">0</div></button>
-                    <button class="nav-item" onclick="switchTab('stocknotify-tab', this, '🔔 Очікування товару')"><div class="nav-item-left"><span class="nav-item-icon-badge">🔔</span> <span>Очікування</span></div><div class="nav-badge" id="badge-stocknotify" style="display:none;">0</div></button>
-                </div>
-                <div class="nav-group">
-                    <div class="nav-group-title-row"><span>Система</span><span class="nav-group-line"></span></div>
-                    <button class="nav-item" onclick="switchTab('archive-tab', this, '🗄️ Архів бази даних')"><div class="nav-item-left"><span class="nav-item-icon-badge">🗄️</span> <span>Архів</span></div></button>
-                    <button class="nav-item" id="superadmin-only-tab-btn" onclick="switchTab('admin-management-tab', this, '⚙️ Безпека')" style="display:none;"><div class="nav-item-left"><span class="nav-item-icon-badge">⚙️</span> <span>Безпека</span></div></button>
-                    <button class="nav-item" id="logs-only-tab-btn" onclick="switchTab('logs-tab', this, '📜 Журнал дій')" style="display:none;"><div class="nav-item-left"><span class="nav-item-icon-badge">📜</span> <span>Журнал дій</span></div></button>
-                    <button class="nav-item" onclick="switchTab('trash-tab', this, '🗑️ Кошик')"><div class="nav-item-left"><span class="nav-item-icon-badge">🗑️</span> <span>Кошик</span></div><div class="nav-badge" id="badge-trash" style="display:none;">0</div></button>
-                </div>
+                <button class="nav-item active" onclick="switchTab('home-tab', this, '🏠 Головна')"><div class="nav-item-left"><span>🏠</span> <span>Головна</span></div></button>
+                <button class="nav-item" onclick="switchTab('active-chats-tab', this, '💬 Анонімні чати')"><div class="nav-item-left"><span>💬</span> <span>Чати</span></div><div class="nav-badge" id="badge-chats">0</div></button>
+                <button class="nav-item" onclick="switchTab('admin-chat-tab', this, '👥 Чат адмінів')"><div class="nav-item-left"><span>👥</span> <span>Чат адмінів</span></div><div class="nav-badge" id="badge-admin-chat" style="display:none;">0</div></button>
+                <button class="nav-item" onclick="switchTab('orders-tab', this, '📦 Управління замовленнями')"><div class="nav-item-left"><span>📦</span> <span>Замовлення</span></div><div class="nav-badge" id="badge-orders">0</div></button>
+                <button class="nav-item" onclick="switchTab('shop-management-tab', this, '🛍️ Склад та Магазин')"><div class="nav-item-left"><span>🛍️</span> <span>Магазин</span></div><div class="nav-badge" id="badge-low-stock" style="display:none; background:#ff4a4a;">0</div></button>
+                <button class="nav-item" onclick="switchTab('promo-tab', this, '🎟️ Купони та Сертифікати')"><div class="nav-item-left"><span>🎟️</span> <span>Купони</span></div></button>
+                <button class="nav-item" onclick="switchTab('stats-tab', this, '🦅 Бойовий Звіт (SVAROG)')"><div class="nav-item-left"><span>🦅</span> <span>Звіт SVAROG</span></div></button>
+                <button class="nav-item" onclick="switchTab('link-management-tab', this, '📰 Контент та Налаштування')"><div class="nav-item-left"><span>📰</span> <span>Контент</span></div></button>
+                <button class="nav-item" onclick="switchTab('hub-management-tab', this, '🔗 Мультипосилання (Хаб)')"><div class="nav-item-left"><span>🔗</span> <span>Мультипосилання</span></div></button>
+                <button class="nav-item" onclick="switchTab('feedback-tab', this, '📂 Заявки з сайту')"><div class="nav-item-left"><span>📂</span> <span>Заявки</span></div><div class="nav-badge" id="badge-feedback">0</div></button>
+                <button class="nav-item" onclick="switchTab('volunteer-tab', this, '📋 Анкети волонтерів')"><div class="nav-item-left"><span>📋</span> <span>Волонтери</span></div><div class="nav-badge" id="badge-volunteers">0</div></button>
+                <button class="nav-item" onclick="switchTab('recruiting-tab', this, '🎖️ Заявки на рекрутинг')"><div class="nav-item-left"><span>🎖️</span> <span>Рекрутинг</span></div><div class="nav-badge" id="badge-recruiting">0</div></button>
+                <button class="nav-item" onclick="switchTab('newsletter-tab', this, '✉️ Підписники розсилки')"><div class="nav-item-left"><span>✉️</span> <span>Розсилка</span></div><div class="nav-badge" id="badge-newsletter" style="display:none;">0</div></button>
+                <button class="nav-item" onclick="switchTab('stocknotify-tab', this, '🔔 Очікування товару')"><div class="nav-item-left"><span>🔔</span> <span>Очікування</span></div><div class="nav-badge" id="badge-stocknotify" style="display:none;">0</div></button>
+                <button class="nav-item" onclick="switchTab('archive-tab', this, '🗄️ Архів бази даних')"><div class="nav-item-left"><span>🗄️</span> <span>Архів</span></div></button>
+                <button class="nav-item" id="superadmin-only-tab-btn" onclick="switchTab('admin-management-tab', this, '⚙️ Безпека')" style="display:none; margin-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); border-radius: 0;"><div class="nav-item-left"><span>⚙️</span> <span>Безпека</span></div></button>
+                <button class="nav-item" id="logs-only-tab-btn" onclick="switchTab('logs-tab', this, '📜 Журнал дій')" style="display:none;"><div class="nav-item-left"><span>📜</span> <span>Журнал дій</span></div></button>
+                <button class="nav-item" onclick="switchTab('trash-tab', this, '🗑️ Кошик')"><div class="nav-item-left"><span>🗑️</span> <span>Кошик</span></div><div class="nav-badge" id="badge-trash" style="display:none;">0</div></button>
             </div>
             <div class="sidebar-footer"><div style="font-size: 0.75rem; color: #888; text-align: center; margin-bottom: 10px;" id="current-admin-email">admin@svarog.com</div><button class="logout-btn" onclick="handleLogout()">🚪 Вийти з системи</button></div>
         </aside>
 
         <main class="main-area">
-            <header class="top-bar"><h1 class="page-title page-title-gradient" id="top-page-title">💬 Анонімні чати</h1><div class="header-right-group"><div class="header-online-pill"><span class="dot"></span>Онлайн</div><div class="header-user-email" id="header-admin-email"></div><div class="header-avatar" id="header-admin-avatar">S</div><div class="lang-switcher"><button class="lang-btn active" onclick="setLanguage('ua')">UA</button><button class="lang-btn" onclick="setLanguage('en')">EN</button></div></div></header>
+            <header class="top-bar"><h1 class="page-title" id="top-page-title">💬 Анонімні чати</h1><div class="lang-switcher"><button class="lang-btn active" onclick="setLanguage('ua')">UA</button><button class="lang-btn" onclick="setLanguage('en')">EN</button></div></header>
 
             <div class="workspace">
                 <div id="home-tab" class="tab-content active">
                     <div class="grid-4" style="margin-bottom: 25px;">
-                        <div class="stat-card-v2" onclick="switchTab('orders-tab', null, '📦 Замовлення')">
-                            <div class="stat-icon">🆕</div>
-                            <div class="stat-value" id="home-stat-orders">0</div>
-                            <div class="stat-label">Нових замовлень</div>
+                        <div class="admin-card" style="margin:0; text-align:center; padding:20px; border-top: 3px solid var(--theme-color); cursor:pointer;" onclick="switchTab('orders-tab', null, '📦 Замовлення')">
+                            <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px;">🆕 Нових замовлень</div>
+                            <div id="home-stat-orders" style="font-size:2.2rem; font-weight:800; color:var(--text-main);">0</div>
                         </div>
-                        <div class="stat-card-v2" onclick="switchTab('active-chats-tab', null, '💬 Анонімні чати')">
-                            <div class="stat-icon">💬</div>
-                            <div class="stat-value" id="home-stat-chats">0</div>
-                            <div class="stat-label">Активних чатів</div>
+                        <div class="admin-card" style="margin:0; text-align:center; padding:20px; cursor:pointer;" onclick="switchTab('active-chats-tab', null, '💬 Анонімні чати')">
+                            <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px;">💬 Активних чатів</div>
+                            <div id="home-stat-chats" style="font-size:2.2rem; font-weight:800; color:var(--theme-color);">0</div>
                         </div>
-                        <div class="stat-card-v2" onclick="switchTab('volunteer-tab', null, '📋 Анкети волонтерів')">
-                            <div class="stat-icon">📋</div>
-                            <div class="stat-value" id="home-stat-volunteers">0</div>
-                            <div class="stat-label">Нових анкет волонтерів</div>
+                        <div class="admin-card" style="margin:0; text-align:center; padding:20px; cursor:pointer;" onclick="switchTab('volunteer-tab', null, '📋 Анкети волонтерів')">
+                            <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px;">📋 Нових анкет волонтерів</div>
+                            <div id="home-stat-volunteers" style="font-size:2.2rem; font-weight:800; color:#00ffcc;">0</div>
                         </div>
-                        <div class="stat-card-v2" onclick="switchTab('feedback-tab', null, '📂 Заявки з сайту')">
-                            <div class="stat-icon">📂</div>
-                            <div class="stat-value" id="home-stat-feedback">0</div>
-                            <div class="stat-label">Нових звернень</div>
+                        <div class="admin-card" style="margin:0; text-align:center; padding:20px; cursor:pointer;" onclick="switchTab('feedback-tab', null, '📂 Заявки з сайту')">
+                            <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px;">📂 Нових звернень</div>
+                            <div id="home-stat-feedback" style="font-size:2.2rem; font-weight:800; color:#fff;">0</div>
                         </div>
                     </div>
                     <div class="grid-2">
@@ -966,12 +919,6 @@
                     <div class="grid-2">
                         <div style="display: flex; flex-direction: column; gap: 20px;">
                             <div class="admin-card"><h3 class="card-title">Статус Магазину</h3><div style="display: flex; align-items: center; gap: 15px; cursor: pointer;" onclick="toggleShopStatus()"><input type="checkbox" id="shop-active-checkbox" style="width: 20px; height: 20px; accent-color: var(--theme-color);"><label style="font-size:1.1rem; font-weight:bold; cursor:pointer;" id="shop-status-label">Магазин увімкнено</label></div></div>
-                            <div class="admin-card" style="border-color:#4a9eff;">
-                                <h3 class="card-title" style="color:#4a9eff; border-bottom-color: rgba(74, 158, 255, 0.3);">🔁 Знижка повторним клієнтам</h3>
-                                <p style="font-size:0.8rem; color:#aaa; margin-bottom:12px;">Якщо покупець уже оформлював замовлення з тим самим номером телефону, знижка застосується автоматично при наступній покупці.</p>
-                                <div class="form-group"><label class="form-label">Розмір знижки (%), 0 = вимкнено:</label><input type="number" id="repeat-discount-input" class="form-input" placeholder="5" min="0" max="50"></div>
-                                <button class="btn btn-outline" style="width:100%; border-color:#4a9eff; color:#4a9eff;" onclick="saveRepeatDiscount()">Зберегти</button>
-                            </div>
                             <div class="admin-card" style="border-color:#ffaa00;">
                                 <h3 class="card-title" style="color:#ffaa00; border-bottom-color: rgba(255, 170, 0, 0.3);">📢 Сповіщення для клієнтів</h3>
                                 <p style="font-size:0.8rem; color:#aaa; margin-bottom:12px;">Наприклад: затримки з доставкою, тимчасові проблеми з оплатою тощо. Показується банером зверху сторінки магазину, коли увімкнено.</p>
@@ -984,24 +931,6 @@
                             </div>
                             <div class="admin-card"><h3 class="card-title">Категорії каталогу</h3><div id="admin-category-list" style="display: flex; flex-direction:column; gap: 10px; margin-bottom: 15px;"></div><div class="form-group"><input type="text" id="new-category-input" class="form-input" placeholder="Нова категорія (напр: Шеврони)"></div><div class="form-group"><label class="form-label">Іконка для категорії:</label><input type="file" id="new-category-icon-file" accept="image/*" class="form-input" style="padding: 8px;"></div><button class="btn" style="width:100%;" onclick="addCategory()">+ Додати категорію</button></div>
                             <div class="admin-card"><h3 class="card-title">📏 Бібліотека розмірних сіток</h3><p style="font-size:0.8rem; color:#aaa; margin-bottom:10px;">Завантаж еталонну сітку один раз — і обирай її потім у будь-якому товарі зі списку.</p><div id="size-charts-list" style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px;"></div><div class="form-group"><input type="text" id="new-sizechart-name" class="form-input" placeholder="Назва (напр: Футболки)"></div><div class="form-group"><input type="file" id="new-sizechart-file" accept="image/*" class="form-input" style="padding:8px;"></div><button class="btn" style="width:100%;" onclick="addSizeChart()">+ Додати сітку</button></div>
-                            <div class="admin-card" style="border-color:#3ecf6a;">
-                                <h3 class="card-title" style="color:#3ecf6a; border-bottom-color: rgba(62, 207, 106, 0.3);">🎁 Комплекти зі знижкою</h3>
-                                <p style="font-size:0.8rem; color:#aaa; margin-bottom:12px;">Обери 2+ товари, які продаються разом дешевше. З'являється окремим блоком у магазині.</p>
-                                <div id="bundles-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;"></div>
-                                <div class="form-group"><input type="text" id="new-bundle-name" class="form-input" placeholder="Назва комплекту (напр: Футболка + Кепка)"></div>
-                                <div class="form-group"><label class="form-label">Товари в комплекті:</label><div id="bundle-item-checkboxes" style="max-height:180px; overflow-y:auto; background:rgba(0,0,0,0.2); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:6px;"></div></div>
-                                <div class="form-group"><label class="form-label">Знижка (%):</label><input type="number" id="new-bundle-discount" class="form-input" placeholder="10" min="1" max="90"></div>
-                                <button class="btn" style="width:100%; background:#3ecf6a;" onclick="addBundle()">+ Створити комплект</button>
-                            </div>
-                            <div class="admin-card" style="border-color:#ff9f4a;">
-                                <h3 class="card-title" style="color:#ff9f4a; border-bottom-color: rgba(255, 159, 74, 0.3);">⭐ Відгуки покупців</h3>
-                                <p style="font-size:0.8rem; color:#aaa; margin-bottom:12px;">Фото реальних покупців у мерчі — показується галереєю в магазині.</p>
-                                <div id="reviews-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;"></div>
-                                <div class="form-group"><input type="text" id="new-review-name" class="form-input" placeholder="Ім'я покупця (напр: Олег, м. Суми)"></div>
-                                <div class="form-group"><textarea id="new-review-text" class="form-input" placeholder="Короткий відгук (необов'язково)" style="min-height:60px;"></textarea></div>
-                                <div class="form-group"><label class="form-label">Фото:</label><input type="file" id="new-review-file" accept="image/*" class="form-input" style="padding:8px;"></div>
-                                <button class="btn" style="width:100%; background:#ff9f4a;" onclick="addReview()">+ Додати відгук</button>
-                            </div>
                         </div>
                         <div class="admin-card">
                             <h3 class="card-title" id="merch-form-title">Додати новий товар</h3><input type="hidden" id="edit-merch-id" value="">
@@ -1229,6 +1158,14 @@
                                 <div class="form-group"><label class="form-label">Посилання на Telegram-бота:</label><input type="text" id="contact-telegram-input" class="form-input" placeholder="https://t.me/svarogteam_bot"></div>
                                 <button class="btn btn-outline" style="width:100%; border-color:#7fdbff; color:#7fdbff;" onclick="saveContactInfo()">Зберегти контакти</button>
                             </div>
+                            <div class="admin-card" style="border-color: #29a9eb;">
+                                <h3 class="card-title" style="color:#29a9eb; border-bottom-color: rgba(41, 169, 235, 0.3);">🤖 Telegram-бот</h3>
+                                <p style="font-size:0.8rem; color:#aaa; margin-bottom:12px;">Токен береться в @BotFather. Робота бота (прийом і надсилання повідомлень) можлива, лише поки ця програма відкрита.</p>
+                                <div class="form-group"><label class="form-label">Токен бота:</label><input type="password" id="telegram-token-input" class="form-input" placeholder="123456:AAExampleTokenHere" autocomplete="off"></div>
+                                <div class="form-group"><label class="form-label">Юзернейм бота (без @):</label><input type="text" id="telegram-username-input" class="form-input" placeholder="svarogteam_bot"></div>
+                                <button class="btn btn-outline" style="width:100%; border-color:#29a9eb; color:#29a9eb; margin-bottom:10px;" onclick="saveTelegramConfig()">Зберегти</button>
+                                <div id="telegram-bot-status" style="font-size:0.8rem; text-align:center; color:#888;">Статус: вимкнено</div>
+                            </div>
                             <div class="admin-card" style="border-color: #b28dff;">
                                 <h3 class="card-title" style="color:#b28dff; border-bottom-color: rgba(178, 141, 255, 0.3);">🤝 Партнери / Фонди</h3>
                                 <p style="font-size:0.8rem; color:#aaa; margin-bottom:12px;">Показуються окремим блоком на сторінці підтримки. Клік по логотипу відкриває посилання.</p>
@@ -1321,7 +1258,7 @@
         let globalHubLinks = []; let globalHubClicks = [];
 
         let unsubscribeChats = null; let unsubscribeFeedback = null; let unsubscribeVolunteers = null; let unsubscribeSocials = null;
-        let unsubscribeRecruiting = null; let unsubscribeNewsletter = null; let unsubscribeSizeCharts = null; let unsubscribePageBackgrounds = null; let unsubscribeAnnouncement = null; let unsubscribePartners = null; let unsubscribeStockNotify = null; let unsubscribeBundles = null; let unsubscribeReviews = null;
+        let unsubscribeRecruiting = null; let unsubscribeNewsletter = null; let unsubscribeSizeCharts = null; let unsubscribePageBackgrounds = null; let unsubscribeAnnouncement = null; let unsubscribePartners = null; let unsubscribeStockNotify = null;
         let unsubscribeNews = null; let unsubscribeOrders = null; let unsubscribeMerch = null; let unsubscribeConfig = null;
         let unsubscribePromos = null; let unsubscribePaymentConfig = null; let unsubscribeReports = null; let unsubscribeStats = null;
         let unsubscribeStatsReal = null; let unsubscribeAdminRequests = null; let unsubscribeAdmins = null;
@@ -1605,7 +1542,7 @@
         }
 
         firebase.auth().onAuthStateChanged(async (user) => {
-            if (user) { const isAdmin = await checkAdminAccess(user.email); if (isAdmin) { document.getElementById('current-admin-email').innerText = user.email; const headerEmailEl = document.getElementById('header-admin-email'); const headerAvatarEl = document.getElementById('header-admin-avatar'); if (headerEmailEl) headerEmailEl.innerText = user.email; if (headerAvatarEl) headerAvatarEl.innerText = (user.email || 'S').charAt(0).toUpperCase(); enterDashboard(); } else { showToast("Немає прав доступу.", "error"); await firebase.auth().signOut(); } }
+            if (user) { const isAdmin = await checkAdminAccess(user.email); if (isAdmin) { document.getElementById('current-admin-email').innerText = user.email; enterDashboard(); } else { showToast("Немає прав доступу.", "error"); await firebase.auth().signOut(); } }
             else { document.getElementById('login-screen').style.display = 'flex'; document.getElementById('app-main').style.display = 'none'; }
         });
 
@@ -1627,7 +1564,7 @@
         }
 
         async function handleLogout() { try { await firebase.auth().signOut(); isSuperadminSession = false; document.getElementById('user-email').value = ""; document.getElementById('user-password').value = ""; setTimeout(() => location.reload(), 500); } catch (e) { console.error(e); } }
-        function enterDashboard() { document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-main').style.display = 'flex'; renderCombatReportAdminGrid(); initFirebaseRealtimeStreams(); generateSizeStockInputs(); document.getElementById('news-date-field').valueAsDate = new Date(); renderCombatReportHistory(); setTimeout(cleanupOldTrash, 5000); }
+        function enterDashboard() { document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-main').style.display = 'flex'; renderCombatReportAdminGrid(); initFirebaseRealtimeStreams(); generateSizeStockInputs(); document.getElementById('news-date-field').valueAsDate = new Date(); renderCombatReportHistory(); setTimeout(cleanupOldTrash, 5000); initTelegramBot(); }
 
         // НОВЕ: Функція запиту доступу (реєстрації)
         function toggleAccessRequestForm() {
@@ -1690,7 +1627,7 @@
                 await db.collection(collectionName).doc(docId).update({ claimedBy: release ? firebase.firestore.FieldValue.delete() : firebase.auth().currentUser.email.toLowerCase() });
             } catch(e) { showToast("Помилка: " + e.message, "error"); }
         }
-        async function sendAdminMessage(chatId) { const input = document.getElementById('admin-chat-input'); if(!input || !input.value.trim()) return; try { await db.collection('chats').doc(chatId).update({ messages: firebase.firestore.FieldValue.arrayUnion({ sender: 'admin', text: input.value.trim(), type: 'text', time: Date.now() }), adminStatus: 'replied', lastUpdate: Date.now() }); input.value = ''; } catch(e) { showToast('Помилка: ' + e.message, "error"); } }
+        async function sendAdminMessage(chatId) { const input = document.getElementById('admin-chat-input'); if(!input || !input.value.trim()) return; const messageText = input.value.trim(); try { await db.collection('chats').doc(chatId).update({ messages: firebase.firestore.FieldValue.arrayUnion({ sender: 'admin', text: messageText, type: 'text', time: Date.now() }), adminStatus: 'replied', lastUpdate: Date.now() }); input.value = ''; const chatData = globalChatsData[chatId]; if (chatData && chatData.telegramChatId) { sendTelegramMessage(chatData.telegramChatId, messageText); } } catch(e) { showToast('Помилка: ' + e.message, "error"); } }
 
         // --- ВНУТРІШНІЙ ЧАТ КОМАНДИ АДМІНІВ ---
         let isFirstAdminChatLoad = true;
@@ -1793,7 +1730,19 @@
                     </div>`;
             });
         }
-        async function changeOrderStatus(id, newStatus) { isConfirmingStatus = true; try { await db.collection("orders").doc(id).update({ status: newStatus }); showToast(`Статус змінено`, "success"); logAdminAction("orders", `Змінив статус замовлення ${id} на "${newStatus}"`); } catch(e) { showToast(e.message, "error"); } finally { isConfirmingStatus = false; renderOrdersList(); } }
+        const orderStatusLabelsForTelegram = { new: 'Нове', on_review: 'На перевірці', accepted: 'Прийнято', sent: 'Відправлено', delivered: 'Доставлено', cancelled: 'Скасовано', archived: 'В архіві' };
+        async function changeOrderStatus(id, newStatus) { isConfirmingStatus = true; try { await db.collection("orders").doc(id).update({ status: newStatus }); showToast(`Статус змінено`, "success"); logAdminAction("orders", `Змінив статус замовлення ${id} на "${newStatus}"`); notifyCustomerOrderStatus(id, newStatus); } catch(e) { showToast(e.message, "error"); } finally { isConfirmingStatus = false; renderOrdersList(); } }
+        async function notifyCustomerOrderStatus(orderId, newStatus) {
+            if (!telegramBotToken) return;
+            try {
+                const orderDoc = await db.collection("orders").doc(orderId).get();
+                if (!orderDoc.exists || !orderDoc.data().userId) return;
+                const custDoc = await db.collection("customers").doc(orderDoc.data().userId).get();
+                if (!custDoc.exists || !custDoc.data().telegramChatId) return;
+                const label = orderStatusLabelsForTelegram[newStatus] || newStatus;
+                await sendTelegramMessage(custDoc.data().telegramChatId, `📦 Статус вашого замовлення (${orderId.substring(0,8)}...) змінено: ${label}`);
+            } catch(e) { console.error("Сповіщення про статус:", e); }
+        }
         // Замість остаточного видалення — позначаємо документ як видалений.
         // Він ховається зі звичайних списків, але лишається в "Кошику" 30 днів.
         async function softDelete(collectionName, docId, displayLabel) {
@@ -1861,71 +1810,12 @@
         // --- МАГАЗИН ---
         function toggleShopStatus() { setTimeout(async () => { const checkbox = document.getElementById('shop-active-checkbox'); if(!checkbox) return; try { await db.collection("config").doc("shop").set({ active: checkbox.checked }, { merge: true }); showToast("Статус оновлено.", "success"); logAdminAction("shop", `${checkbox.checked ? 'Увімкнув' : 'Вимкнув'} магазин`); } catch(e) { showToast(e.message, "error"); } }, 50); }
 
-        async function saveRepeatDiscount() {
-            const val = parseInt(document.getElementById('repeat-discount-input').value) || 0;
-            try { await db.collection("config").doc("shop").set({ repeatCustomerDiscount: val }, { merge: true }); showToast("Збережено!", "success"); logAdminAction("shop", `Встановив знижку повторним клієнтам: ${val}%`); }
-            catch(e) { showToast(e.message, "error"); }
-        }
-
         function toggleShopAnnouncement() { setTimeout(async () => { const checkbox = document.getElementById('shop-announcement-checkbox'); if(!checkbox) return; const text = document.getElementById('shop-announcement-text').value.trim(); try { await db.collection("config").doc("announcement").set({ enabled: checkbox.checked, text }, { merge: true }); showToast(checkbox.checked ? "Сповіщення увімкнено." : "Сповіщення вимкнено.", "success"); logAdminAction("shop", `${checkbox.checked ? 'Увімкнув' : 'Вимкнув'} сповіщення для клієнтів`); } catch(e) { showToast(e.message, "error"); } }, 50); }
         async function saveShopAnnouncementText() {
             const text = document.getElementById('shop-announcement-text').value.trim();
             try { await db.collection("config").doc("announcement").set({ text }, { merge: true }); showToast("Текст збережено!", "success"); logAdminAction("shop", "Оновив текст сповіщення для клієнтів"); }
             catch(e) { showToast(e.message, "error"); }
         }
-        // ==================== КОМПЛЕКТИ ЗІ ЗНИЖКОЮ ====================
-        let globalBundles = [];
-        function renderBundleItemCheckboxes() {
-            const box = document.getElementById('bundle-item-checkboxes'); if (!box) return;
-            if (!globalMerchData || globalMerchData.length === 0) { box.innerHTML = '<span style="color:#888; font-size:0.8rem;">Спершу додайте товари</span>'; return; }
-            box.innerHTML = globalMerchData.map(item => `<label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="${item.id}" class="bundle-item-checkbox" style="width:16px; height:16px;">${item.title}</label>`).join('');
-        }
-        function renderBundlesAdmin() {
-            const box = document.getElementById('bundles-list'); if (!box) return;
-            if (globalBundles.length === 0) { box.innerHTML = '<span style="color:#aaa; font-size:0.85rem;">Комплектів ще немає</span>'; return; }
-            box.innerHTML = globalBundles.map(b => {
-                const itemNames = b.itemIds.map(id => { const m = globalMerchData.find(x => x.id === id); return m ? m.title : '?'; }).join(' + ');
-                return `<div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:10px 14px;"><div style="display:flex; justify-content:space-between; align-items:center;"><b>${b.name}</b><span style="color:#ff4a4a; cursor:pointer;" onclick="deleteBundle('${b.id}')">✖</span></div><div style="font-size:0.8rem; color:#aaa; margin-top:4px;">${itemNames} · знижка ${b.discountPercent}%</div></div>`;
-            }).join('');
-        }
-        async function addBundle() {
-            const name = document.getElementById('new-bundle-name').value.trim();
-            const discount = parseInt(document.getElementById('new-bundle-discount').value);
-            const checked = Array.from(document.querySelectorAll('.bundle-item-checkbox:checked')).map(cb => cb.value);
-            if (!name) { showToast("Введіть назву комплекту!", "error"); return; }
-            if (checked.length < 2) { showToast("Оберіть щонайменше 2 товари!", "error"); return; }
-            if (!discount || discount < 1 || discount > 90) { showToast("Вкажіть знижку від 1 до 90%!", "error"); return; }
-            try {
-                await db.collection("bundles").add({ name, itemIds: checked, discountPercent: discount, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-                document.getElementById('new-bundle-name').value = ''; document.getElementById('new-bundle-discount').value = '';
-                document.querySelectorAll('.bundle-item-checkbox:checked').forEach(cb => cb.checked = false);
-                showToast("Комплект створено!", "success"); logAdminAction("shop", `Створив комплект: ${name}`);
-            } catch(e) { showToast(e.message, "error"); }
-        }
-        async function deleteBundle(id) { if (confirm("Видалити цей комплект?")) { try { await db.collection("bundles").doc(id).delete(); showToast("Видалено.", "success"); } catch(e) { showToast(e.message, "error"); } } }
-
-        // ==================== ВІДГУКИ ПОКУПЦІВ ====================
-        let globalReviews = [];
-        function renderReviewsAdmin() {
-            const box = document.getElementById('reviews-list'); if (!box) return;
-            if (globalReviews.length === 0) { box.innerHTML = '<span style="color:#aaa; font-size:0.85rem;">Відгуків ще немає</span>'; return; }
-            box.innerHTML = globalReviews.map(r => `<div style="display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px;"><img src="${r.photo}" style="width:40px; height:40px; object-fit:cover; border-radius:6px;"><div style="flex:1;"><div style="font-size:0.9rem; font-weight:bold;">${r.name}</div>${r.text ? `<div style="font-size:0.78rem; color:#888;">${r.text.slice(0,50)}${r.text.length>50?'…':''}</div>` : ''}</div><span style="color:#ff4a4a; cursor:pointer; font-weight:bold;" onclick="deleteReview('${r.id}')">✖</span></div>`).join('');
-        }
-        async function addReview() {
-            const name = document.getElementById('new-review-name').value.trim();
-            const text = document.getElementById('new-review-text').value.trim();
-            const fileInp = document.getElementById('new-review-file');
-            if (!name) { showToast("Введіть ім'я!", "error"); return; }
-            if (!fileInp.files || !fileInp.files[0]) { showToast("Оберіть фото!", "error"); return; }
-            try {
-                const photo = await getCompressedBase64(fileInp.files[0]);
-                await db.collection("reviews").add({ name, text, photo, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-                document.getElementById('new-review-name').value = ''; document.getElementById('new-review-text').value = ''; fileInp.value = '';
-                showToast("Відгук додано!", "success"); logAdminAction("shop", `Додав відгук: ${name}`);
-            } catch(e) { showToast(e.message, "error"); }
-        }
-        async function deleteReview(id) { if (confirm("Видалити цей відгук?")) { try { await db.collection("reviews").doc(id).delete(); showToast("Видалено.", "success"); } catch(e) { showToast(e.message, "error"); } } }
-
         function renderSizeChartsAdmin() {
             const box = document.getElementById('size-charts-list'); if (!box) return;
             if (globalSizeCharts.length === 0) { box.innerHTML = '<span style="color:#aaa; font-size:0.85rem;">Немає сіток у бібліотеці</span>'; return; }
@@ -2160,6 +2050,139 @@
             const telegramBot = document.getElementById('contact-telegram-input').value.trim();
             try { await db.collection("config").doc("contact").set({ phone, telegramBot }, { merge: true }); showToast("Контакти збережено!", "success"); logAdminAction("settings", "Оновив контакт-центр (телефон/бот)"); }
             catch(e) { showToast(e.message, "error"); }
+        }
+
+        // ==================== TELEGRAM-БОТ ====================
+        let telegramBotToken = null;
+        let telegramBotUsername = null;
+        let telegramPollTimer = null;
+
+        async function saveTelegramConfig() {
+            const token = document.getElementById('telegram-token-input').value.trim();
+            const username = document.getElementById('telegram-username-input').value.trim().replace('@', '');
+            if (!token || !username) { showToast("Заповніть обидва поля!", "error"); return; }
+            try {
+                await db.collection("secrets").doc("telegram").set({ token }, { merge: true });
+                await db.collection("config").doc("telegram").set({ username }, { merge: true });
+                showToast("Збережено! Перевіряю з'єднання...", "success");
+                logAdminAction("settings", "Оновив налаштування Telegram-бота");
+                initTelegramBot();
+            } catch(e) { showToast(e.message, "error"); }
+        }
+
+        async function initTelegramBot() {
+            try {
+                const secretDoc = await db.collection("secrets").doc("telegram").get();
+                const cfgDoc = await db.collection("config").doc("telegram").get();
+                if (!secretDoc.exists || !secretDoc.data().token) { document.getElementById('telegram-bot-status').innerText = "Статус: не налаштовано"; return; }
+                telegramBotToken = secretDoc.data().token;
+                telegramBotUsername = (cfgDoc.exists && cfgDoc.data().username) || '';
+                document.getElementById('telegram-token-input').value = telegramBotToken;
+                document.getElementById('telegram-username-input').value = telegramBotUsername;
+                // Перевірка токена
+                const resp = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getMe`);
+                const data = await resp.json();
+                const statusEl = document.getElementById('telegram-bot-status');
+                if (data.ok) {
+                    statusEl.innerText = `Статус: підключено (@${data.result.username})`;
+                    statusEl.style.color = "#3ecf6a";
+                    startTelegramPolling();
+                } else {
+                    statusEl.innerText = "Статус: невірний токен";
+                    statusEl.style.color = "#ff4a4a";
+                }
+            } catch(e) { console.error("Telegram init:", e); }
+        }
+
+        function startTelegramPolling() {
+            if (telegramPollTimer) clearInterval(telegramPollTimer);
+            pollTelegramUpdates();
+            telegramPollTimer = setInterval(pollTelegramUpdates, 7000);
+        }
+
+        async function pollTelegramUpdates() {
+            if (!telegramBotToken) return;
+            try {
+                const cfgDoc = await db.collection("secrets").doc("telegram").get();
+                const lastUpdateId = (cfgDoc.exists && cfgDoc.data().lastUpdateId) || 0;
+                const resp = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getUpdates?offset=${lastUpdateId + 1}&timeout=0`);
+                const data = await resp.json();
+                if (!data.ok || !data.result || data.result.length === 0) return;
+
+                let maxUpdateId = lastUpdateId;
+                for (const update of data.result) {
+                    if (update.update_id > maxUpdateId) maxUpdateId = update.update_id;
+                    const msg = update.message;
+                    if (!msg || !msg.chat) continue;
+                    const chatId = msg.chat.id;
+                    const text = msg.text || '';
+
+                    if (text.startsWith('/start')) {
+                        await handleTelegramStart(chatId, text);
+                    } else if (text) {
+                        await handleTelegramIncomingMessage(chatId, text);
+                    }
+                }
+                await db.collection("secrets").doc("telegram").set({ lastUpdateId: maxUpdateId }, { merge: true });
+            } catch(e) { console.error("Telegram polling:", e); }
+        }
+
+        async function handleTelegramStart(chatId, text) {
+            const parts = text.split(' ');
+            const payload = parts.length > 1 ? parts[1] : '';
+
+            if (payload.startsWith('chat_')) {
+                // Прив'язка до наявного анонімного чату з сайту
+                const sessionId = payload.replace('chat_', '');
+                const chatRef = db.collection("chats").doc(sessionId);
+                const chatDoc = await chatRef.get();
+                if (chatDoc.exists) {
+                    await chatRef.update({ telegramChatId: chatId });
+                    await sendTelegramMessage(chatId, "✅ Telegram підключено до вашого чату на сайті. Пишіть тут — повідомлення потраплять прямо адміністратору.");
+                    return;
+                }
+            } else if (payload.startsWith('cust_')) {
+                // Прив'язка до акаунту клієнта (для сповіщень про замовлення)
+                const uid = payload.replace('cust_', '');
+                const custRef = db.collection("customers").doc(uid);
+                const custDoc = await custRef.get();
+                if (custDoc.exists) {
+                    await custRef.update({ telegramChatId: chatId });
+                    await sendTelegramMessage(chatId, "✅ Telegram підключено до вашого акаунту. Тепер сповіщення про статус замовлень надходитимуть сюди.");
+                    return;
+                }
+            }
+
+            // Загальний старт (рекрутинг/інформація) — без прив'язки
+            await sendTelegramMessage(chatId, "👋 Вітаємо в SVAROG TEAM!\n\nТут можна написати нам напряму — повідомлення отримає адміністратор.\n\nЦікавить долучення до підрозділу? Заявку можна подати тут: https://svarogteam.com/recruiting.html");
+        }
+
+        async function handleTelegramIncomingMessage(chatId, text) {
+            const snap = await db.collection("chats").where("telegramChatId", "==", chatId).limit(1).get();
+            if (!snap.empty) {
+                const chatDoc = snap.docs[0];
+                await chatDoc.ref.update({
+                    messages: firebase.firestore.FieldValue.arrayUnion({ sender: 'user', text, type: 'text', time: Date.now() }),
+                    adminStatus: 'new', lastUpdate: Date.now()
+                });
+            } else {
+                // Новий діалог, що почався прямо в Telegram, без сесії на сайті
+                const newChatRef = db.collection("chats").doc();
+                await newChatRef.set({
+                    telegramChatId: chatId, adminStatus: 'new', lastUpdate: Date.now(), createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    messages: [{ sender: 'user', text, type: 'text', time: Date.now() }]
+                });
+            }
+        }
+
+        async function sendTelegramMessage(chatId, text) {
+            if (!telegramBotToken) return;
+            try {
+                await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, text })
+                });
+            } catch(e) { console.error("Telegram sendMessage:", e); }
         }
         async function saveShopHeroImage() { if(!shopHeroBase64) { showToast("Оберіть файл!", "warning"); return; } try { await db.collection("config").doc("shop").set({ heroImage: shopHeroBase64 }, { merge: true }); showToast("Банер оновлено!", "success"); } catch(e) { showToast(e.message, "error"); } }
         async function savePaymentCredentials() { const bankUrl = document.getElementById('new-donation-link-field').value.trim(); const cardNumber = document.getElementById('config-card-number').value.trim(); const cardName = document.getElementById('config-card-name').value.trim(); try { await db.collection("config").doc("payment").set({ bankUrl, cardNumber, cardName }, { merge: true }); showToast("Збережено!", "success"); logAdminAction("payment", "Оновив платіжні реквізити"); } catch(e) { showToast(e.message, "error"); } }
@@ -2658,10 +2681,8 @@
                     updateHubAnalytics();
                 });
 
-                unsubscribeMerch = db.collection("merch").onSnapshot(snapshot => { globalMerchData = []; globalTrashItems.merch = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.deletedAt) { globalTrashItems.merch.push(d); return; } globalMerchData.push(d); }); globalMerchData.sort((a, b) => { let orderA = a.order !== undefined ? a.order : Number.MAX_SAFE_INTEGER; let orderB = b.order !== undefined ? b.order : Number.MAX_SAFE_INTEGER; if (orderA === orderB) { let timeA = a.timestamp ? a.timestamp.toMillis() : 0; let timeB = b.timestamp ? b.timestamp.toMillis() : 0; return timeB - timeA; } return orderA - orderB; }); renderMerchList(); checkLowStock(); renderTrashTab(); renderBundleItemCheckboxes(); renderBundlesAdmin(); });
-                unsubscribeBundles = db.collection("bundles").onSnapshot(snapshot => { globalBundles = []; snapshot.forEach(doc => { globalBundles.push({ id: doc.id, ...doc.data() }); }); renderBundlesAdmin(); });
-                unsubscribeReviews = db.collection("reviews").orderBy("timestamp", "desc").onSnapshot(snapshot => { globalReviews = []; snapshot.forEach(doc => { globalReviews.push({ id: doc.id, ...doc.data() }); }); renderReviewsAdmin(); });
-                unsubscribeConfig = db.collection("config").doc("shop").onSnapshot(doc => { const data = doc.exists ? doc.data() : {}; const isActive = data.active !== undefined ? data.active : true; const checkbox = document.getElementById('shop-active-checkbox'); const label = document.getElementById('shop-status-label'); if(checkbox) checkbox.checked = isActive; if(label) { if(isActive) { label.innerText = "Магазин увімкнено"; label.style.color = "var(--theme-color)"; } else { label.innerText = "Магазин вимкнено"; label.style.color = "#ff4a4a"; } } globalCategories = data.categories || []; if(data.heroImage) { shopHeroBase64 = data.heroImage; const heroPreview = document.getElementById('shop-hero-preview-element'); if(heroPreview) { heroPreview.src = data.heroImage; heroPreview.style.display = 'block'; } } const repeatInput = document.getElementById('repeat-discount-input'); if (repeatInput && document.activeElement !== repeatInput) repeatInput.value = data.repeatCustomerDiscount || ''; renderCategoriesAdmin(); populateCategorySelect(); });
+                unsubscribeMerch = db.collection("merch").onSnapshot(snapshot => { globalMerchData = []; globalTrashItems.merch = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.deletedAt) { globalTrashItems.merch.push(d); return; } globalMerchData.push(d); }); globalMerchData.sort((a, b) => { let orderA = a.order !== undefined ? a.order : Number.MAX_SAFE_INTEGER; let orderB = b.order !== undefined ? b.order : Number.MAX_SAFE_INTEGER; if (orderA === orderB) { let timeA = a.timestamp ? a.timestamp.toMillis() : 0; let timeB = b.timestamp ? b.timestamp.toMillis() : 0; return timeB - timeA; } return orderA - orderB; }); renderMerchList(); checkLowStock(); renderTrashTab(); });
+                unsubscribeConfig = db.collection("config").doc("shop").onSnapshot(doc => { const data = doc.exists ? doc.data() : {}; const isActive = data.active !== undefined ? data.active : true; const checkbox = document.getElementById('shop-active-checkbox'); const label = document.getElementById('shop-status-label'); if(checkbox) checkbox.checked = isActive; if(label) { if(isActive) { label.innerText = "Магазин увімкнено"; label.style.color = "var(--theme-color)"; } else { label.innerText = "Магазин вимкнено"; label.style.color = "#ff4a4a"; } } globalCategories = data.categories || []; if(data.heroImage) { shopHeroBase64 = data.heroImage; const heroPreview = document.getElementById('shop-hero-preview-element'); if(heroPreview) { heroPreview.src = data.heroImage; heroPreview.style.display = 'block'; } } renderCategoriesAdmin(); populateCategorySelect(); });
                 unsubscribeAnnouncement = db.collection("config").doc("announcement").onSnapshot(doc => { const data = doc.exists ? doc.data() : {}; const checkbox = document.getElementById('shop-announcement-checkbox'); const label = document.getElementById('shop-announcement-status-label'); const textField = document.getElementById('shop-announcement-text'); if(checkbox) checkbox.checked = data.enabled || false; if(label) { label.innerText = data.enabled ? "Сповіщення увімкнено" : "Сповіщення вимкнено"; label.style.color = data.enabled ? "#ffaa00" : "#aaa"; } if(textField && document.activeElement !== textField) textField.value = data.text || ''; });
                 unsubscribePartners = db.collection("partners").orderBy("order", "asc").onSnapshot(snapshot => { globalPartners = []; snapshot.forEach(doc => { globalPartners.push({ id: doc.id, ...doc.data() }); }); renderPartnersList(); });
                 db.collection("config").doc("heroImages").get().then(doc => { if (doc.exists && Array.isArray(doc.data().images)) { heroImagesArray = doc.data().images; renderHeroImagesPreview(); } }).catch(e => console.error("Фото фону головної:", e));
