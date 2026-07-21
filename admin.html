@@ -956,7 +956,7 @@
                 <div id="orders-tab" class="tab-content">
                     <div class="admin-card" style="padding: 15px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; gap: 10px;"><button class="btn btn-outline active" id="sub-btn-active" onclick="setOrdersFilter('active')">Активні</button><button class="btn btn-outline" id="sub-btn-sent" onclick="setOrdersFilter('sent')">Відправлені</button><button class="btn btn-outline" id="sub-btn-archive" onclick="setOrdersFilter('archive')">Архів</button></div>
-                        <input type="text" id="orders-search-input" class="form-input" style="max-width:250px; margin-bottom:0;" placeholder="🔍 Пошук: ім'я, телефон, товар..." oninput="renderOrdersList()">
+                        <input type="text" id="orders-search-input" class="form-input" style="max-width:250px; margin-bottom:0;" placeholder="🔍 Пошук: ім'я, телефон, товар..." autocomplete="off" name="orders-admin-search" oninput="renderOrdersList()">
                         <button class="btn" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border-color); color: #fff;" onclick="exportToCSV('shopOrdersData', 'Shop_Orders')">📊 Експорт в Excel</button>
                     </div>
                     <div id="box-for-orders"></div>
@@ -975,6 +975,12 @@
                                 </div>
                                 <div class="form-group"><textarea id="shop-announcement-text" class="form-input" placeholder="Наприклад: Через велику кількість замовлень доставка може затримуватись на 2-3 дні." style="min-height:70px;"></textarea></div>
                                 <button class="btn btn-outline" style="width:100%; border-color:#ffaa00; color:#ffaa00;" onclick="saveShopAnnouncementText()">Зберегти текст</button>
+                            </div>
+                            <div class="admin-card" style="border-color:#3ecf6a;">
+                                <h3 class="card-title" style="color:#3ecf6a; border-bottom-color: rgba(62, 207, 106, 0.3);">🔁 Знижка повторним клієнтам</h3>
+                                <p style="font-size:0.8rem; color:#aaa; margin-bottom:12px;">Застосовується автоматично, коли клієнт вводить номер телефону, за яким уже було замовлення. Не сумується з промокодом.</p>
+                                <div class="form-group"><label class="form-label">Розмір знижки (%):</label><input type="number" id="repeat-discount-input" class="form-input" placeholder="5"></div>
+                                <button class="btn btn-outline" style="width:100%; border-color:#3ecf6a; color:#3ecf6a;" onclick="saveRepeatDiscount()">Зберегти</button>
                             </div>
                             <div class="admin-card"><h3 class="card-title">Категорії каталогу</h3><div id="admin-category-list" style="display: flex; flex-direction:column; gap: 10px; margin-bottom: 15px;"></div><div class="form-group"><input type="text" id="new-category-input" class="form-input" placeholder="Нова категорія (напр: Шеврони)"></div><div class="form-group"><label class="form-label">Іконка для категорії:</label><input type="file" id="new-category-icon-file" accept="image/*" class="form-input" style="padding: 8px;"></div><button class="btn" style="width:100%;" onclick="addCategory()">+ Додати категорію</button></div>
                             <div class="admin-card"><h3 class="card-title">📏 Бібліотека розмірних сіток</h3><p style="font-size:0.8rem; color:#aaa; margin-bottom:10px;">Завантаж еталонну сітку один раз — і обирай її потім у будь-якому товарі зі списку.</p><div id="size-charts-list" style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px;"></div><div class="form-group"><input type="text" id="new-sizechart-name" class="form-input" placeholder="Назва (напр: Футболки)"></div><div class="form-group"><input type="file" id="new-sizechart-file" accept="image/*" class="form-input" style="padding:8px;"></div><button class="btn" style="width:100%;" onclick="addSizeChart()">+ Додати сітку</button></div>
@@ -1016,6 +1022,27 @@
                         </div>
                     </div>
                     <div class="admin-card" style="margin-top: 20px;"><h3 class="card-title">Вітрина товарів</h3><div class="merch-grid" id="box-for-merch-items"></div></div>
+
+                    <div class="grid-2" style="margin-top: 20px;">
+                        <div class="admin-card" style="border-color: #3ecf6a;">
+                            <h3 class="card-title" style="color:#3ecf6a; border-bottom-color: rgba(62, 207, 106, 0.3);">🎁 Комплекти зі знижкою</h3>
+                            <p style="font-size:0.8rem; color:#aaa; margin-bottom:12px;">Кілька товарів разом з окремою знижкою. Показуються на сторінці магазину як окремий блок.</p>
+                            <div id="bundles-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;"></div>
+                            <div class="form-group"><input type="text" id="new-bundle-name" class="form-input" placeholder="Назва комплекту"></div>
+                            <div class="form-group"><label class="form-label">Товари в комплекті:</label><div id="bundle-item-checkboxes" style="display:flex; flex-direction:column; gap:6px; max-height:180px; overflow-y:auto; background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; border:1px solid var(--border-color);"></div></div>
+                            <div class="form-group"><label class="form-label">Знижка (%):</label><input type="number" id="new-bundle-discount" class="form-input" placeholder="10"></div>
+                            <button class="btn" style="width:100%; background:#3ecf6a;" onclick="addBundle()">+ Додати комплект</button>
+                        </div>
+                        <div class="admin-card" style="border-color: #e8a88a;">
+                            <h3 class="card-title" style="color:#e8a88a; border-bottom-color: rgba(232, 168, 138, 0.3);">⭐ Відгуки покупців</h3>
+                            <p style="font-size:0.8rem; color:#aaa; margin-bottom:12px;">Показуються на сторінці магазину як галерея "Наші люди в мерчі".</p>
+                            <div id="reviews-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;"></div>
+                            <div class="form-group"><input type="text" id="new-review-name" class="form-input" placeholder="Ім'я клієнта"></div>
+                            <div class="form-group"><textarea id="new-review-text" class="form-input" placeholder="Текст відгуку" style="min-height:60px;"></textarea></div>
+                            <div class="form-group"><label class="form-label">Фото:</label><input type="file" id="new-review-photo" accept="image/*" class="form-input" style="padding:8px;"></div>
+                            <button class="btn" style="width:100%; background:#e8a88a; color:#121212;" onclick="addReview()">+ Додати відгук</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="promo-tab" class="tab-content">
@@ -1236,7 +1263,7 @@
                 <div id="recruiting-tab" class="tab-content"><button class="btn btn-outline" style="margin-bottom:15px;" onclick="exportToCSV('recruitingData', 'Recruiting_Applications')">📊 Експорт в Excel</button><div id="box-for-recruiting" style="display:flex; flex-direction:column; gap:15px;"></div></div>
                 <div id="newsletter-tab" class="tab-content"><button class="btn btn-outline" style="margin-bottom:15px;" onclick="exportToCSV('newsletterData', 'Newsletter_Subscribers')">📊 Експорт в Excel</button><div id="box-for-newsletter" style="display:flex; flex-direction:column; gap:15px;"></div></div>
                 <div id="stocknotify-tab" class="tab-content"><button class="btn btn-outline" style="margin-bottom:15px;" onclick="exportToCSV('stockNotifyData', 'Stock_Notifications')">📊 Експорт в Excel</button><div id="box-for-stocknotify" style="display:flex; flex-direction:column; gap:15px;"></div></div>
-                <div id="volunteer-tab" class="tab-content"><div style="display:flex; gap:10px; align-items:center; margin-bottom:15px; flex-wrap:wrap;"><button class="btn btn-outline" style="width:auto; margin-bottom:0;" onclick="exportToCSV('siteVolunteerData', 'Volunteer_Forms')">📊 Експорт в Excel</button><input type="text" id="volunteers-search-input" class="form-input" style="max-width:250px; margin-bottom:0;" placeholder="🔍 Пошук: ім'я, телефон..." oninput="renderVolunteersList()"></div><div id="box-for-volunteers" style="display:flex; flex-direction:column; gap:15px;"></div></div>
+                <div id="volunteer-tab" class="tab-content"><div style="display:flex; gap:10px; align-items:center; margin-bottom:15px; flex-wrap:wrap;"><button class="btn btn-outline" style="width:auto; margin-bottom:0;" onclick="exportToCSV('siteVolunteerData', 'Volunteer_Forms')">📊 Експорт в Excel</button><input type="text" id="volunteers-search-input" class="form-input" style="max-width:250px; margin-bottom:0;" placeholder="🔍 Пошук: ім'я, телефон..." autocomplete="off" name="volunteers-admin-search" oninput="renderVolunteersList()"></div><div id="box-for-volunteers" style="display:flex; flex-direction:column; gap:15px;"></div></div>
                 <div id="archive-tab" class="tab-content"><div id="box-for-archive" style="display:flex; flex-direction:column; gap:15px;"></div></div>
 
                 <div id="admin-management-tab" class="tab-content">
@@ -1305,7 +1332,7 @@
         let globalHubLinks = []; let globalHubClicks = [];
 
         let unsubscribeChats = null; let unsubscribeFeedback = null; let unsubscribeVolunteers = null; let unsubscribeSocials = null;
-        let unsubscribeRecruiting = null; let unsubscribeNewsletter = null; let unsubscribeSizeCharts = null; let unsubscribePageBackgrounds = null; let unsubscribeAnnouncement = null; let unsubscribePartners = null; let unsubscribeStockNotify = null;
+        let unsubscribeRecruiting = null; let unsubscribeNewsletter = null; let unsubscribeSizeCharts = null; let unsubscribePageBackgrounds = null; let unsubscribeAnnouncement = null; let unsubscribePartners = null; let unsubscribeStockNotify = null; let unsubscribeBundles = null; let unsubscribeReviews = null;
         let unsubscribeNews = null; let unsubscribeOrders = null; let unsubscribeMerch = null; let unsubscribeConfig = null;
         let unsubscribePromos = null; let unsubscribePaymentConfig = null; let unsubscribeReports = null; let unsubscribeStats = null;
         let unsubscribeStatsReal = null; let unsubscribeAdminRequests = null; let unsubscribeAdmins = null;
@@ -1863,6 +1890,64 @@
             try { await db.collection("config").doc("announcement").set({ text }, { merge: true }); showToast("Текст збережено!", "success"); logAdminAction("shop", "Оновив текст сповіщення для клієнтів"); }
             catch(e) { showToast(e.message, "error"); }
         }
+
+        // ==================== ЗНИЖКА ПОВТОРНИМ КЛІЄНТАМ ====================
+        async function saveRepeatDiscount() {
+            const val = parseInt(document.getElementById('repeat-discount-input').value) || 0;
+            try { await db.collection("config").doc("shop").set({ repeatCustomerDiscount: val }, { merge: true }); showToast("Збережено!", "success"); logAdminAction("shop", `Оновив знижку повторним клієнтам: ${val}%`); }
+            catch(e) { showToast(e.message, "error"); }
+        }
+
+        // ==================== КОМПЛЕКТИ ЗІ ЗНИЖКОЮ ====================
+        let globalBundles = [];
+        function renderBundleItemCheckboxes() {
+            const box = document.getElementById('bundle-item-checkboxes'); if (!box) return;
+            if (globalMerchData.length === 0) { box.innerHTML = '<span style="color:#888; font-size:0.85rem;">Спочатку додайте товари</span>'; return; }
+            box.innerHTML = globalMerchData.map(item => `<label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" value="${item.id}" class="bundle-item-checkbox"> ${item.title}</label>`).join('');
+        }
+        function renderBundlesAdmin() {
+            const box = document.getElementById('bundles-list'); if (!box) return;
+            if (globalBundles.length === 0) { box.innerHTML = '<span style="color:#aaa; font-size:0.85rem;">Комплектів ще немає</span>'; return; }
+            box.innerHTML = globalBundles.map(b => {
+                const itemNames = (b.itemIds || []).map(id => { const m = globalMerchData.find(x => x.id === id); return m ? m.title : '?'; }).join(', ');
+                return `<div style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:10px 14px;"><div style="display:flex; justify-content:space-between; align-items:center;"><span style="font-weight:bold;">${b.name}</span><span style="color:#3ecf6a; font-weight:bold;">-${b.discountPercent}%</span></div><div style="font-size:0.78rem; color:#888; margin-top:4px;">${itemNames}</div><span style="color:#ff4a4a; cursor:pointer; font-size:0.8rem; display:inline-block; margin-top:6px;" onclick="deleteBundle('${b.id}')">Видалити</span></div>`;
+            }).join('');
+        }
+        async function addBundle() {
+            const name = document.getElementById('new-bundle-name').value.trim();
+            const discount = parseInt(document.getElementById('new-bundle-discount').value) || 0;
+            const itemIds = Array.from(document.querySelectorAll('.bundle-item-checkbox:checked')).map(cb => cb.value);
+            if (!name || itemIds.length < 2 || !discount) { showToast("Введіть назву, оберіть 2+ товари та знижку!", "error"); return; }
+            try {
+                await db.collection("bundles").add({ name, itemIds, discountPercent: discount, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                document.getElementById('new-bundle-name').value = ''; document.getElementById('new-bundle-discount').value = '';
+                document.querySelectorAll('.bundle-item-checkbox:checked').forEach(cb => cb.checked = false);
+                showToast("Комплект додано!", "success"); logAdminAction("shop", `Додав комплект: "${name}"`);
+            } catch(e) { showToast(e.message, "error"); }
+        }
+        async function deleteBundle(id) { if (confirm("Видалити цей комплект?")) { try { await db.collection("bundles").doc(id).delete(); showToast("Видалено.", "success"); } catch(e) { showToast(e.message, "error"); } } }
+
+        // ==================== ВІДГУКИ ПОКУПЦІВ ====================
+        let globalReviews = [];
+        function renderReviewsAdmin() {
+            const box = document.getElementById('reviews-list'); if (!box) return;
+            if (globalReviews.length === 0) { box.innerHTML = '<span style="color:#aaa; font-size:0.85rem;">Відгуків ще немає</span>'; return; }
+            box.innerHTML = globalReviews.map(r => `<div style="display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px;">${r.photo ? `<img src="${r.photo}" style="width:36px; height:36px; object-fit:cover; border-radius:4px; cursor:zoom-in;" onclick="openImageLightbox('${r.photo}')">` : ''}<div style="flex:1;"><div style="font-size:0.9rem; font-weight:bold;">${r.customerName}</div><div style="font-size:0.78rem; color:#888;">${(r.text || '').slice(0, 50)}</div></div><span style="color:#ff4a4a; cursor:pointer; font-weight:bold;" onclick="deleteReview('${r.id}')">✖</span></div>`).join('');
+        }
+        async function addReview() {
+            const customerName = document.getElementById('new-review-name').value.trim();
+            const text = document.getElementById('new-review-text').value.trim();
+            const fileInp = document.getElementById('new-review-photo');
+            if (!customerName || !text) { showToast("Введіть ім'я та текст відгуку!", "error"); return; }
+            try {
+                let photo = null;
+                if (fileInp.files && fileInp.files[0]) photo = await getCompressedBase64(fileInp.files[0]);
+                await db.collection("reviews").add({ customerName, text, photo, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                document.getElementById('new-review-name').value = ''; document.getElementById('new-review-text').value = ''; fileInp.value = '';
+                showToast("Відгук додано!", "success"); logAdminAction("shop", `Додав відгук від: ${customerName}`);
+            } catch(e) { showToast(e.message, "error"); }
+        }
+        async function deleteReview(id) { if (confirm("Видалити цей відгук?")) { try { await db.collection("reviews").doc(id).delete(); showToast("Видалено.", "success"); } catch(e) { showToast(e.message, "error"); } } }
         function renderSizeChartsAdmin() {
             const box = document.getElementById('size-charts-list'); if (!box) return;
             if (globalSizeCharts.length === 0) { box.innerHTML = '<span style="color:#aaa; font-size:0.85rem;">Немає сіток у бібліотеці</span>'; return; }
@@ -2728,8 +2813,10 @@
                     updateHubAnalytics();
                 });
 
-                unsubscribeMerch = db.collection("merch").onSnapshot(snapshot => { globalMerchData = []; globalTrashItems.merch = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.deletedAt) { globalTrashItems.merch.push(d); return; } globalMerchData.push(d); }); globalMerchData.sort((a, b) => { let orderA = a.order !== undefined ? a.order : Number.MAX_SAFE_INTEGER; let orderB = b.order !== undefined ? b.order : Number.MAX_SAFE_INTEGER; if (orderA === orderB) { let timeA = a.timestamp ? a.timestamp.toMillis() : 0; let timeB = b.timestamp ? b.timestamp.toMillis() : 0; return timeB - timeA; } return orderA - orderB; }); renderMerchList(); checkLowStock(); renderTrashTab(); });
-                unsubscribeConfig = db.collection("config").doc("shop").onSnapshot(doc => { const data = doc.exists ? doc.data() : {}; const isActive = data.active !== undefined ? data.active : true; const checkbox = document.getElementById('shop-active-checkbox'); const label = document.getElementById('shop-status-label'); if(checkbox) checkbox.checked = isActive; if(label) { if(isActive) { label.innerText = "Магазин увімкнено"; label.style.color = "var(--theme-color)"; } else { label.innerText = "Магазин вимкнено"; label.style.color = "#ff4a4a"; } } globalCategories = data.categories || []; if(data.heroImage) { shopHeroBase64 = data.heroImage; const heroPreview = document.getElementById('shop-hero-preview-element'); if(heroPreview) { heroPreview.src = data.heroImage; heroPreview.style.display = 'block'; } } renderCategoriesAdmin(); populateCategorySelect(); });
+                unsubscribeMerch = db.collection("merch").onSnapshot(snapshot => { globalMerchData = []; globalTrashItems.merch = []; snapshot.forEach(doc => { const d = { id: doc.id, ...doc.data() }; if (d.deletedAt) { globalTrashItems.merch.push(d); return; } globalMerchData.push(d); }); globalMerchData.sort((a, b) => { let orderA = a.order !== undefined ? a.order : Number.MAX_SAFE_INTEGER; let orderB = b.order !== undefined ? b.order : Number.MAX_SAFE_INTEGER; if (orderA === orderB) { let timeA = a.timestamp ? a.timestamp.toMillis() : 0; let timeB = b.timestamp ? b.timestamp.toMillis() : 0; return timeB - timeA; } return orderA - orderB; }); renderMerchList(); checkLowStock(); renderTrashTab(); renderBundleItemCheckboxes(); renderBundlesAdmin(); });
+                unsubscribeConfig = db.collection("config").doc("shop").onSnapshot(doc => { const data = doc.exists ? doc.data() : {}; const isActive = data.active !== undefined ? data.active : true; const checkbox = document.getElementById('shop-active-checkbox'); const label = document.getElementById('shop-status-label'); if(checkbox) checkbox.checked = isActive; if(label) { if(isActive) { label.innerText = "Магазин увімкнено"; label.style.color = "var(--theme-color)"; } else { label.innerText = "Магазин вимкнено"; label.style.color = "#ff4a4a"; } } globalCategories = data.categories || []; if(data.heroImage) { shopHeroBase64 = data.heroImage; const heroPreview = document.getElementById('shop-hero-preview-element'); if(heroPreview) { heroPreview.src = data.heroImage; heroPreview.style.display = 'block'; } } const repeatInp = document.getElementById('repeat-discount-input'); if (repeatInp && document.activeElement !== repeatInp) repeatInp.value = data.repeatCustomerDiscount || ''; renderCategoriesAdmin(); populateCategorySelect(); });
+                unsubscribeBundles = db.collection("bundles").onSnapshot(snapshot => { globalBundles = []; snapshot.forEach(doc => globalBundles.push({ id: doc.id, ...doc.data() })); renderBundlesAdmin(); });
+                unsubscribeReviews = db.collection("reviews").onSnapshot(snapshot => { globalReviews = []; snapshot.forEach(doc => globalReviews.push({ id: doc.id, ...doc.data() })); renderReviewsAdmin(); });
                 unsubscribeAnnouncement = db.collection("config").doc("announcement").onSnapshot(doc => { const data = doc.exists ? doc.data() : {}; const checkbox = document.getElementById('shop-announcement-checkbox'); const label = document.getElementById('shop-announcement-status-label'); const textField = document.getElementById('shop-announcement-text'); if(checkbox) checkbox.checked = data.enabled || false; if(label) { label.innerText = data.enabled ? "Сповіщення увімкнено" : "Сповіщення вимкнено"; label.style.color = data.enabled ? "#ffaa00" : "#aaa"; } if(textField && document.activeElement !== textField) textField.value = data.text || ''; });
                 unsubscribePartners = db.collection("partners").orderBy("order", "asc").onSnapshot(snapshot => { globalPartners = []; snapshot.forEach(doc => { globalPartners.push({ id: doc.id, ...doc.data() }); }); renderPartnersList(); });
                 db.collection("config").doc("heroImages").get().then(doc => { if (doc.exists && Array.isArray(doc.data().images)) { heroImagesArray = doc.data().images; renderHeroImagesPreview(); } }).catch(e => console.error("Фото фону головної:", e));
