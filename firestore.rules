@@ -1,0 +1,416 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================================
+    // HELPER FUNCTIONS
+    // ============================================================
+
+    function isAdmin() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['super_admin', 'moderator', 'operator'];
+    }
+
+    function isSuperAdmin() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'super_admin';
+    }
+
+    function isModerator() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['super_admin', 'moderator'];
+    }
+
+    function isOperator() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['super_admin', 'moderator', 'operator'];
+    }
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role;
+    }
+
+    function hasPermission(resource, action) {
+      let role = getUserRole();
+      let permissions = get(/databases/$(database)/documents/roles/$(role)).data.permissions;
+      return permissions[resource][action] == true;
+    }
+
+    function isValidEmail(email) {
+      return email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    function isValidPhone(phone) {
+      return phone.matches('^[+]?[0-9]{10,15}$');
+    }
+
+    // ============================================================
+    // ADMINS COLLECTION - User accounts with roles
+    // ============================================================
+
+    match /admins/{adminId} {
+      // Read: Self or super_admin
+      allow read: if request.auth.uid == adminId || isSuperAdmin();
+
+      // Create: Super admin only
+      allow create: if isSuperAdmin()
+        && request.resource.data.email != null
+        && request.resource.data.role in ['super_admin', 'moderator', 'operator']
+        && request.resource.data.permissions is map
+        && request.resource.data.created_at is timestamp
+        && request.resource.data.updated_at is timestamp;
+
+      // Update: Self (limited) or super_admin (full)
+      allow update: if (request.auth.uid == adminId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions']))
+        || isSuperAdmin();
+
+      // Delete: Super admin only
+      allow delete: if isSuperAdmin();
+    }
+
+    // ============================================================
+    // ROLES COLLECTION - Role definitions with permissions
+    // ============================================================
+
+    match /roles/{roleId} {
+      // Read: All authenticated users
+      allow read: if request.auth != null;
+
+      // Write/Delete: Super admin only
+      allow write, delete: if isSuperAdmin();
+    }
+
+    // ============================================================
+    // CONFIG COLLECTION - API keys and sensitive config
+    // ============================================================
+
+    match /config/{section} {
+      // Read: Authenticated admins (but filter sensitive data)
+      allow read: if isAdmin()
+        && (isSuperAdmin() || (
+          resource.data.apiKey == null
+          && resource.data.apiSecret == null
+          && resource.data.privateKey == null
+          && resource.data.accessToken == null
+          && resource.data.secretAccessKey == null
+        ));
+
+      // Write/Delete: Super admin only
+      allow write, delete: if isSuperAdmin()
+        && request.resource.data.updated_at is timestamp;
+    }
+
+    // ============================================================
+    // ORDERS COLLECTION - Customer orders
+    // ============================================================
+
+    match /orders/{orderId} {
+      // Read: Authenticated admins, customer can read own orders
+      allow read: if isAdmin()
+        || (request.auth != null && resource.data.customer_id == request.auth.uid);
+
+      // Create: Public (customers), admins can create for customers
+      allow create: if request.auth != null
+        && request.resource.data.order_date is timestamp
+        && request.resource.data.status in ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'returned']
+        && request.resource.data.total > 0
+        && request.resource.data.created_at is timestamp
+        && request.resource.data.updated_at is timestamp;
+
+      // Update: Operator+ (status updates), customer can update own orders
+      allow update: if (isOperator() && hasPermission('orders', 'update'))
+        || (request.auth != null && resource.data.customer_id == request.auth.uid && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'total', 'created_at']));
+
+      // Delete: Super admin only
+      allow delete: if isSuperAdmin();
+
+      // Subcollection: Photos
+      match /photos/{photoId} {
+        allow read: if isAdmin()
+          || (request.auth != null && get(/databases/$(database)/documents/orders/$(orderId)).data.customer_id == request.auth.uid);
+        allow create: if isOperator()
+          || (request.auth != null && get(/databases/$(database)/documents/orders/$(orderId)).data.customer_id == request.auth.uid)
+          && request.resource.data.url != null
+          && request.resource.data.created_at is timestamp;
+        allow update, delete: if isSuperAdmin() || (isOperator() && hasPermission('orders', 'update'));
+      }
+
+      // Subcollection: Messages/Chat
+      match /messages/{messageId} {
+        allow read: if isAdmin()
+          || (request.auth != null && get(/databases/$(database)/documents/orders/$(orderId)).data.customer_id == request.auth.uid);
+        allow create: if request.auth != null
+          && request.resource.data.sender_id == request.auth.uid
+          && request.resource.data.text != null
+          && request.resource.data.created_at is timestamp;
+        allow update: if request.auth.uid == resource.data.sender_id
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['sender_id', 'created_at']);
+        allow delete: if request.auth.uid == resource.data.sender_id || isSuperAdmin();
+      }
+    }
+
+    // ============================================================
+    // CUSTOMERS COLLECTION - Customer profiles
+    // ============================================================
+
+    match /customers/{customerId} {
+      // Read: Admins, self
+      allow read: if isAdmin() || request.auth.uid == customerId;
+
+      // Create: Public or admins
+      allow create: if (request.auth != null && !isAdmin()) || isOperator()
+        && request.resource.data.email != null
+        && isValidEmail(request.resource.data.email)
+        && request.resource.data.created_at is timestamp
+        && request.resource.data.updated_at is timestamp;
+
+      // Update: Admins, self
+      allow update: if isOperator() || request.auth.uid == customerId;
+
+      // Delete: Super admin only
+      allow delete: if isSuperAdmin();
+
+      // Subcollection: Photos
+      match /photos/{photoId} {
+        allow read: if isAdmin() || request.auth.uid == customerId;
+        allow create: if (isOperator() || request.auth.uid == customerId)
+          && request.resource.data.url != null
+          && request.resource.data.created_at is timestamp;
+        allow update, delete: if isSuperAdmin() || (isOperator() && hasPermission('customers', 'update'));
+      }
+    }
+
+    // ============================================================
+    // CAMPAIGNS COLLECTION - Marketing campaigns
+    // ============================================================
+
+    match /campaigns/{campaignId} {
+      // Read: Admins only
+      allow read: if isAdmin();
+
+      // Create: Moderator+
+      allow create: if isModerator()
+        && request.resource.data.type in ['email', 'sms', 'push']
+        && request.resource.data.status in ['draft', 'scheduled', 'sent', 'failed']
+        && request.resource.data.created_at is timestamp
+        && request.resource.data.updated_at is timestamp;
+
+      // Update: Moderator+
+      allow update: if isModerator() && hasPermission('campaigns', 'update')
+        && request.resource.data.updated_at is timestamp;
+
+      // Delete: Super admin only
+      allow delete: if isSuperAdmin();
+    }
+
+    // ============================================================
+    // TEMPLATES COLLECTION - Email/SMS templates
+    // ============================================================
+
+    match /templates/{templateId} {
+      // Read: Admins only
+      allow read: if isAdmin();
+
+      // Create/Update: Moderator+
+      allow create, update: if isModerator()
+        && request.resource.data.type in ['email', 'sms']
+        && request.resource.data.subject != null
+        && request.resource.data.body != null
+        && request.resource.data.created_at is timestamp
+        && request.resource.data.updated_at is timestamp;
+
+      // Delete: Super admin only
+      allow delete: if isSuperAdmin();
+    }
+
+    // ============================================================
+    // FEEDBACK COLLECTION - Customer feedback
+    // ============================================================
+
+    match /feedback/{feedbackId} {
+      // Read: Admins
+      allow read: if isAdmin();
+
+      // Create: Public
+      allow create: if request.auth != null
+        && request.resource.data.type in ['bug', 'feature', 'general']
+        && request.resource.data.message != null
+        && request.resource.data.created_at is timestamp;
+
+      // Update: Moderator+ (status), creator (limited)
+      allow update: if (isModerator() && hasPermission('feedback', 'update'))
+        || (request.auth.uid == resource.data.sender_id && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'updated_at']));
+
+      // Delete: Super admin only
+      allow delete: if isSuperAdmin();
+    }
+
+    // ============================================================
+    // ADMIN_LOGS COLLECTION - Audit trail (read-only, auto-created)
+    // ============================================================
+
+    match /admin_logs/{logId} {
+      // Read: Moderator+ only
+      allow read: if isModerator();
+
+      // Write: Cloud Functions only
+      allow write: if false;
+
+      // Delete: Super admin only
+      allow delete: if isSuperAdmin();
+    }
+
+    // ============================================================
+    // PUBLIC COLLECTIONS - News, merchandise, hub links
+    // ============================================================
+
+    match /news/{newsId} {
+      // Read: All
+      allow read: if true;
+
+      // Create/Update: Moderator+
+      allow create, update: if isModerator()
+        && request.resource.data.title != null
+        && request.resource.data.created_at is timestamp
+        && request.resource.data.updated_at is timestamp;
+
+      // Delete: Super admin only
+      allow delete: if isSuperAdmin();
+    }
+
+    match /merch/{merchId} {
+      // Read: All
+      allow read: if true;
+
+      // Create/Update: Moderator+
+      allow create, update: if isModerator()
+        && request.resource.data.name != null
+        && request.resource.data.price > 0
+        && request.resource.data.created_at is timestamp
+        && request.resource.data.updated_at is timestamp;
+
+      // Delete: Super admin only
+      allow delete: if isSuperAdmin();
+    }
+
+    match /hub_links/{linkId} {
+      // Read: All
+      allow read: if true;
+
+      // Create/Update: Moderator+
+      allow create, update: if isModerator()
+        && request.resource.data.url != null
+        && request.resource.data.title != null
+        && request.resource.data.created_at is timestamp
+        && request.resource.data.updated_at is timestamp;
+
+      // Delete: Super admin only
+      allow delete: if isSuperAdmin();
+    }
+
+    // ============================================================
+    // CHATS COLLECTION - Direct messaging between users
+    // ============================================================
+
+    match /chats/{chatId} {
+      // Read: Participants only
+      allow read: if request.auth.uid in resource.data.participants
+        || isAdmin();
+
+      // Create: Authenticated users (new chat)
+      allow create: if request.auth != null
+        && request.auth.uid in request.resource.data.participants
+        && request.resource.data.participants.size() >= 2
+        && request.resource.data.created_at is timestamp
+        && request.resource.data.updated_at is timestamp;
+
+      // Update: Super admin only
+      allow update: if isSuperAdmin();
+
+      // Delete: Super admin only
+      allow delete: if isSuperAdmin();
+
+      // Subcollection: Chat messages
+      match /messages/{messageId} {
+        // Read: Chat participants, admins
+        allow read: if request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants
+          || isAdmin();
+
+        // Create: Chat participants
+        allow create: if request.auth != null
+          && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants
+          && request.resource.data.sender_id == request.auth.uid
+          && request.resource.data.text != null
+          && request.resource.data.created_at is timestamp;
+
+        // Update: Sender only (limited)
+        allow update: if request.auth.uid == resource.data.sender_id
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['sender_id', 'created_at']);
+
+        // Delete: Sender or super admin
+        allow delete: if request.auth.uid == resource.data.sender_id || isSuperAdmin();
+      }
+    }
+
+    // ============================================================
+    // NOTIFICATIONS COLLECTION - User notifications
+    // ============================================================
+
+    match /notifications/{userId}/{notificationId} {
+      // Read: Own notifications or admins
+      allow read: if request.auth.uid == userId || isAdmin();
+
+      // Create: Cloud Functions only
+      allow create: if false;
+
+      // Update: Own notifications (mark as read)
+      allow update: if request.auth.uid == userId
+        && request.resource.data.diff(resource.data).changedKeys().equals(['read']);
+
+      // Delete: Own notifications or super admin
+      allow delete: if request.auth.uid == userId || isSuperAdmin();
+    }
+
+    // ============================================================
+    // ANALYTICS COLLECTION - System analytics data
+    // ============================================================
+
+    match /analytics/{period} {
+      // Read: Admins only
+      allow read: if isAdmin();
+
+      // Write: Cloud Functions only
+      allow write: if false;
+
+      // Delete: Super admin only
+      allow delete: if isSuperAdmin();
+    }
+
+    // ============================================================
+    // MEDIA COLLECTION - Central storage for all media
+    // ============================================================
+
+    match /media/{mediaId} {
+      // Read: Admins and uploader
+      allow read: if isAdmin() || request.auth.uid == resource.data.uploaded_by;
+
+      // Create: Authenticated users
+      allow create: if request.auth != null
+        && request.resource.data.uploaded_by == request.auth.uid
+        && request.resource.data.type in ['image', 'document', 'video', 'other']
+        && request.resource.data.url != null
+        && request.resource.data.created_at is timestamp;
+
+      // Update: Uploader (metadata only) or super admin
+      allow update: if request.auth.uid == resource.data.uploaded_by
+        || isSuperAdmin();
+
+      // Delete: Uploader or super admin
+      allow delete: if request.auth.uid == resource.data.uploaded_by || isSuperAdmin();
+    }
+
+    // ============================================================
+    // DEFAULT DENY
+    // ============================================================
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
