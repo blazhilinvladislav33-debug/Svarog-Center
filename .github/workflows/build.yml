@@ -1,8 +1,6 @@
 name: Build and Release Electron App
 
 on:
-  release:
-    types: [published]
   push:
     branches:
       - main
@@ -10,66 +8,57 @@ on:
       - 'package.json'
       - 'main.js'
       - 'admin.html'
+  release:
+    types: [published]
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-
+  build-windows:
+    runs-on: windows-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build Windows
-        if: matrix.os == 'windows-latest'
-        run: npm run dist:win
-
-      - name: Build macOS
-        if: matrix.os == 'macos-latest'
-        run: npm run dist:mac
-
-      - name: Upload Windows artifact
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
+          node-version: '20'
+      
+      - run: npm install
+      - run: npm run dist:win
+      
+      - uses: actions/upload-artifact@v4
         with:
-          name: windows-installer
+          name: windows-exe
           path: dist/*.exe
 
-      - name: Upload macOS artifact
-        if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          name: macos-installer
+          node-version: '20'
+      
+      - run: npm install
+      - run: npm run dist:mac
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg
           path: dist/*.dmg
 
-  upload-to-release:
-    needs: build
+  upload-release:
+    needs: [build-windows, build-macos]
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
-
+    
     steps:
-      - name: Download Windows artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: windows-installer
-
-      - name: Download macOS artifact
-        uses: actions/download-artifact@v4
+          name: windows-exe
+      
+      - uses: actions/download-artifact@v4
         with:
-          name: macos-installer
-
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v1
+          name: macos-dmg
+      
+      - uses: softprops/action-gh-release@v1
         with:
           files: |
             *.exe
