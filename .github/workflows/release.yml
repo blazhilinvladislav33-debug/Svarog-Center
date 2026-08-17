@@ -1,75 +1,28 @@
-name: Build Electron App
+name: Build App
 
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
-          node-version: '18'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build for Windows
-        run: npm run dist:win
-
-      - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+          node-version: '20'
+      
+      - run: npm install
+      - run: npm list electron-builder
+      - run: npm run dist:${{ matrix.os == 'windows-latest' && 'win' || 'mac' }}
+      
+      - uses: actions/upload-artifact@v4
         with:
-          name: windows-build
-          path: dist/*.exe
-
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build for macOS
-        run: npm run dist:mac
-
-      - name: Upload macOS artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-build
-          path: dist/*.dmg
-
-  create-release:
-    needs: [build-windows, build-macos]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Get version
-        id: version
-        run: echo "VERSION=$(grep '"'"'version'"'"' package.json | head -1 | awk -F'"' '{print $4}')" >> $GITHUB_OUTPUT
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ steps.version.outputs.VERSION }}
-          files: |
-            windows-build/*.exe
-            macos-build/*.dmg
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: build-${{ matrix.os }}
+          path: dist/
