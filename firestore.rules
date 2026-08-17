@@ -1,0 +1,120 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ═══════════════════════════════════════════════════════════════
+    // HELPER FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════
+
+    function isAdmin() {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()));
+    }
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.token.email.lower())).data.role;
+    }
+
+    function isSuperAdmin() {
+      return isAdmin() && getUserRole() == 'super_admin';
+    }
+
+    function isModerator() {
+      return isAdmin() && (getUserRole() == 'super_admin' || getUserRole() == 'moderator');
+    }
+
+    function isOperator() {
+      return isAdmin() && (getUserRole() == 'super_admin' || getUserRole() == 'moderator' || getUserRole() == 'operator');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ADMINS (Roles: super_admin, moderator, operator)
+    // ═══════════════════════════════════════════════════════════════
+    match /admins/{email} {
+      allow read: if request.auth.token.email.lower() == email || isSuperAdmin();
+      allow create: if isSuperAdmin();
+      allow update: if isSuperAdmin() || request.auth.token.email.lower() == email;
+      allow delete: if isSuperAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CONFIGURATION (All Settings)
+    // ═══════════════════════════════════════════════════════════════
+    match /config/{doc} {
+      allow read: if isAdmin();
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ORDERS
+    // ═══════════════════════════════════════════════════════════════
+    match /orders/{orderId} {
+      allow read: if isAdmin();
+      allow create: if request.auth == null;
+      allow update: if isOperator();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // FEEDBACK
+    // ═══════════════════════════════════════════════════════════════
+    match /feedback/{feedbackId} {
+      allow read: if isAdmin() || request.auth == null;
+      allow create: if request.auth == null;
+      allow update: if isModerator();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PUBLIC DATA
+    // ═══════════════════════════════════════════════════════════════
+    match /news/{newsId} {
+      allow read: if true;
+      allow create, update, delete: if isModerator();
+    }
+
+    match /merch/{merchId} {
+      allow read: if true;
+      allow create, update, delete: if isModerator();
+    }
+
+    match /hub_links/{linkId} {
+      allow read: if true;
+      allow create, update, delete: if isModerator();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CRM CUSTOMERS
+    // ═══════════════════════════════════════════════════════════════
+    match /customers/{customerId} {
+      allow read: if isAdmin();
+      allow create, update: if isOperator();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MARKETING CAMPAIGNS
+    // ═══════════════════════════════════════════════════════════════
+    match /campaigns/{campaignId} {
+      allow read: if isAdmin();
+      allow create, update: if isModerator();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ADMIN LOGS
+    // ═══════════════════════════════════════════════════════════════
+    match /admin_logs/{logId} {
+      allow read: if isModerator();
+      allow create: if true;
+      allow delete: if isSuperAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // DEFAULT: DENY ALL
+    // ═══════════════════════════════════════════════════════════════
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
