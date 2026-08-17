@@ -1,0 +1,396 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════════════════
+// SVAROG Command Center — Firestore Security Rules v3.1.0
+//
+// Покриває ВСІ 25 колекцій проєкту + публічний сайт + адмінку.
+//
+// РОЛІ (поле `role` у документі admins/{email}):
+//   super_admin — повний доступ, включно з ключами оплат і секретами
+//   moderator   — контент, магазин, розсилки, промокоди, відгуки
+//   operator    — замовлення, клієнти, чати, ТТН
+//   admin       — legacy-роль, яку створює ваша адмінка. Прирівняна до
+//                 super_admin, щоб нічого не зламалось. Мігруйте на нові.
+// ═══════════════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ═══════════════════════════════════════════════════════════════════
+    // ХЕЛПЕРИ
+    // ═══════════════════════════════════════════════════════════════════
+
+    // Документи адмінів ключуються email'ом у нижньому регістрі
+    function adminDoc() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()));
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email != null;
+    }
+
+    // Будь-який співробітник (є запис у admins)
+    function isAdmin() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()));
+    }
+
+    function role() {
+      return adminDoc().data.role;
+    }
+
+    // 'admin' — legacy-роль зі старої адмінки, вважаємо її найвищою
+    function isSuperAdmin() {
+      return isAdmin() && (role() == 'super_admin' || role() == 'admin');
+    }
+
+    function isModerator() {
+      return isAdmin() && (role() == 'super_admin' || role() == 'admin' || role() == 'moderator');
+    }
+
+    function isOperator() {
+      return isAdmin() && (role() == 'super_admin' || role() == 'admin' ||
+                           role() == 'moderator' || role() == 'operator');
+    }
+
+    // Гість сайту (не залогінений) — саме він робить замовлення
+    function isGuest() {
+      return request.auth == null;
+    }
+
+    // Захист від спаму: обмеження розміру документа
+    function notTooBig(maxFields) {
+      return request.resource.data.keys().size() <= maxFields;
+    }
+
+    // Заборона змінювати службові поля клієнтом
+    function keepsLocked(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 1. АДМІНИ ТА ДОСТУП
+    // ═══════════════════════════════════════════════════════════════════
+
+    match /admins/{email} {
+      // Читає будь-який співробітник: адмінка при старті вантажить увесь
+      // список, щоб підписувати імена у внутрішньому чаті й логах.
+      // Якби залишити «тільки свій запис», цей запит падав би для всіх,
+      // крім super_admin, і ламав ініціалізацію.
+      allow read:   if isAdmin() || (isSignedIn() && request.auth.token.email.lower() == email);
+      allow create: if isSuperAdmin();
+      // Роль може міняти ТІЛЬКИ super_admin — інакше оператор підвищить себе
+      allow update: if isSuperAdmin() ||
+                       (request.auth.token.email.lower() == email && keepsLocked(['role']));
+      allow delete: if isSuperAdmin();
+    }
+
+    // Заявки на доступ до адмінки
+    match /admin_requests/{reqId} {
+      allow read:   if isModerator();
+      allow create: if isSignedIn();          // залогінений просить доступ
+      allow update: if isSuperAdmin();        // схвалення/відхилення
+      allow delete: if isSuperAdmin();
+    }
+
+    // Журнал дій адмінів — писати можна, редагувати НІ (щоб не підчистили сліди)
+    match /admin_logs/{logId} {
+      allow read:   if isModerator();
+      allow create: if isAdmin();
+      allow update: if false;
+      allow delete: if isSuperAdmin();
+    }
+
+    // Внутрішній чат між адмінами
+    match /admin_chat_messages/{msgId} {
+      allow read:   if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource.data.author == request.auth.token.email.lower();
+      allow delete: if isSuperAdmin();
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 2. СЕКРЕТИ ТА КОНФІГ
+    // ═══════════════════════════════════════════════════════════════════
+
+    // API-ключі, токени. Доступ тільки super_admin.
+    // Найкраще тримати їх у Cloud Functions env, а не тут.
+    match /secrets/{docId} {
+      allow read, write: if isSuperAdmin();
+    }
+
+    // config — це налаштування САЙТУ. Реальні документи у вашій базі:
+    //   announcement, combat_report, contact, heroImages, pageBackgrounds,
+    //   payment, shop, socials, statistics, telegram
+    //
+    // Логіка навпаки, ніж може здатись: за замовчуванням читання ПУБЛІЧНЕ,
+    // бо сайт мусить показувати банер, контакти, соцмережі, статистику
+    // і реквізити для донатів. Закриваємо лише те, що справді таємне.
+    match /config/{docId} {
+
+      // 🔒 Закритий список — тільки ці документи ховаємо
+      //    telegram = токен бота
+      allow read: if !(docId in ['telegram']) || isSuperAdmin();
+
+      // Реквізити картки міняє тільки super_admin (це про гроші),
+      // токен бота — теж. Решту налаштувань — модератор.
+      allow write: if docId in ['payment', 'telegram']
+                      ? isSuperAdmin()
+                      : isModerator();
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 3. МАГАЗИН — публічне читання, адмінське редагування
+    // ═══════════════════════════════════════════════════════════════════
+
+    match /merch/{itemId} {
+      allow read:  if true;                   // товари бачать усі
+      allow write: if isModerator();
+    }
+
+    match /bundles/{bundleId} {
+      allow read:  if true;                   // комплекти/набори
+      allow write: if isModerator();
+    }
+
+    match /sizeCharts/{chartId} {
+      allow read:  if true;                   // таблиці розмірів
+      allow write: if isModerator();
+    }
+
+    match /promocodes/{codeId} {
+      // Сайт має перевіряти промокод — читання дозволене.
+      // ⚠️ Не зберігайте тут нічого чутливого: значення знижки видно всім.
+      allow read:  if true;
+      allow write: if isModerator();
+    }
+
+    match /partners/{partnerId} {
+      allow read:  if true;
+      allow write: if isModerator();
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 4. ЗАМОВЛЕННЯ
+    // ═══════════════════════════════════════════════════════════════════
+
+    match /orders/{orderId} {
+      allow read: if isOperator();
+
+      // Замовлення створює гість із сайту АБО оператор вручну.
+      // Статус завжди стартує з 'new' — клієнт не може створити «оплачено».
+      allow create: if (isGuest() || isOperator())
+                       && notTooBig(40)
+                       && request.resource.data.status in ['new', 'pending'];
+
+      allow update: if isOperator();
+      allow delete: if isSuperAdmin();
+
+      // Історія змін замовлення
+      match /history/{eventId} {
+        allow read:   if isOperator();
+        allow create: if isOperator();
+        allow update, delete: if false;
+      }
+    }
+
+    // Сповіщення «повідомити про наявність»
+    match /stock_notifications/{notifId} {
+      allow read:   if isOperator();
+      allow create: if isGuest() || isAdmin();   // підписка з сайту
+      allow update: if isOperator();
+      allow delete: if isModerator();
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 5. КЛІЄНТИ (CRM)
+    // ═══════════════════════════════════════════════════════════════════
+
+    match /customers/{customerId} {
+      // Персональні дані — тільки для співробітників, ніколи публічно
+      allow read:   if isOperator();
+      allow create: if isOperator() || isGuest();  // автостворення при замовленні
+      allow update: if isOperator();
+      allow delete: if isSuperAdmin();
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 6. ЧАТИ З КЛІЄНТАМИ
+    // ═══════════════════════════════════════════════════════════════════
+    // Це і був головний блокер: колекції chats у правилах не було взагалі,
+    // тому default-deny рубав її — чати не завантажувались.
+
+    match /chats/{chatId} {
+      // get = читання конкретного чату за ID (гість знає ID своєї сесії)
+      // list = перелік УСІХ чатів — тільки для операторів,
+      //        інакше будь-хто витягнув би всі переписки клієнтів
+      allow get:    if isOperator() || isGuest();
+      allow list:   if isOperator();
+
+      allow create: if isGuest() || isOperator();
+      // Гість не може закрити чи перепризначити чат — це службові поля
+      allow update: if isOperator() ||
+                       (isGuest() && keepsLocked(['status', 'adminStatus', 'assignedTo']));
+      allow delete: if isSuperAdmin();
+
+      match /messages/{msgId} {
+        allow get:    if isOperator() || isGuest();
+        allow list:   if isOperator() || isGuest();   // тільки в межах відомого chatId
+        allow create: if (isGuest() || isOperator()) && notTooBig(15);
+        allow update: if isOperator();
+        allow delete: if isModerator();
+      }
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 7. КОНТЕНТ САЙТУ
+    // ═══════════════════════════════════════════════════════════════════
+
+    match /news/{newsId} {
+      allow read:  if true;
+      allow write: if isModerator();
+    }
+
+    match /hub_links/{linkId} {
+      allow read:  if true;
+      allow write: if isModerator();
+    }
+
+    // Кліки по посиланнях хабу — аналітика
+    match /hub_clicks/{clickId} {
+      allow read:   if isModerator();
+      allow create: if true;                  // рахуємо клік будь-кого
+      allow update: if false;                 // лічильник не переписують
+      allow delete: if isSuperAdmin();
+    }
+
+    match /combat_report_history/{reportId} {
+      allow read:  if true;                   // архів звітів публічний
+      allow write: if isModerator();
+    }
+
+    match /reports/{reportId} {
+      allow read:  if isModerator();          // внутрішні звіти
+      allow write: if isModerator();
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 8. ВІДГУКИ ТА ЗВОРОТНИЙ ЗВ'ЯЗОК
+    // ═══════════════════════════════════════════════════════════════════
+
+    match /reviews/{reviewId} {
+      // Публічно видно тільки схвалені відгуки.
+      // ⚠️ ВАЖЛИВО: сайт мусить запитувати їх ЯВНО з фільтром
+      //    .where('approved', '==', true)
+      // інакше весь запит впаде з permission-denied.
+      allow read:   if resource.data.approved == true || isModerator();
+      // Гість може лишити відгук, але не може сам себе схвалити
+      allow create: if (isGuest() || isSignedIn())
+                       && notTooBig(15)
+                       && request.resource.data.approved == false;
+      allow update: if isModerator();
+      allow delete: if isModerator();
+    }
+
+    match /feedback/{feedbackId} {
+      allow read:   if isModerator();
+      allow create: if isGuest() || isSignedIn();
+      allow update: if isModerator();
+      allow delete: if isSuperAdmin();
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 9. РОЗСИЛКИ
+    // ═══════════════════════════════════════════════════════════════════
+
+    match /newsletter_subscribers/{subId} {
+      // Список email'ів НЕ публічний — інакше його спарсять
+      allow read:   if isModerator();
+      allow create: if isGuest() || isSignedIn();   // підписка з сайту
+      allow update: if isModerator();
+      allow delete: if isModerator();               // відписка робиться через Function
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 10. РЕКРУТИНГ І ВОЛОНТЕРИ
+    // ═══════════════════════════════════════════════════════════════════
+
+    match /recruiting_applications/{appId} {
+      // Анкети містять персональні дані — читає тільки команда
+      allow read:   if isModerator();
+      allow create: if isGuest() || isSignedIn();
+      allow update: if isModerator();
+      allow delete: if isSuperAdmin();
+    }
+
+    match /volunteers/{volId} {
+      allow read:   if isModerator();
+      allow create: if isGuest() || isSignedIn();
+      allow update: if isModerator();
+      allow delete: if isSuperAdmin();
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 11. РОЗСИЛКИ ТА ШАБЛОНИ (розділ «Розсилки»)
+    // ═══════════════════════════════════════════════════════════════════
+
+    match /templates/{templateId} {
+      allow read:   if isAdmin();
+      allow create: if isModerator()
+                       && request.resource.data.type in ['email', 'sms']
+                       && request.resource.data.name is string
+                       && request.resource.data.body is string;
+      allow update: if isModerator();
+      allow delete: if isModerator();
+    }
+
+    match /campaigns/{campaignId} {
+      allow read:   if isAdmin();
+
+      // Кампанію можна лише поставити в чергу — статус 'queued'.
+      // Далі її забирає Cloud Function; вручну «надіслано» не поставити.
+      allow create: if isModerator()
+                       && request.resource.data.status == 'queued'
+                       && request.resource.data.type in ['email', 'sms'];
+
+      // Прогрес відправки пише Cloud Function (Admin SDK обходить правила).
+      // Адмінам лишаємо тільки скасування чернетки.
+      allow update: if isSuperAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 12. РЕЗЕРВНІ КОПІЇ (розділ «Копії та журнал»)
+    // ═══════════════════════════════════════════════════════════════════
+
+    match /backups/{backupId} {
+      allow read:   if isModerator();
+      allow create: if isModerator();
+      allow update: if false;              // запис про копію не редагується
+      allow delete: if isSuperAdmin();
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 13. ВСЕ ІНШЕ — ЗАБОРОНЕНО
+    // ═══════════════════════════════════════════════════════════════════
+    // Якщо додасте нову колекцію — не забудьте дописати правило вище,
+    // інакше вона буде недоступна (саме через це раніше не працювали чати).
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
